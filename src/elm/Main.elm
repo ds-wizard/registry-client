@@ -170,7 +170,7 @@ view model =
 
         html =
             [ header
-            , div [ class "ui main text container" ]
+            , div [ class "ui main container" ]
                 [ content ]
             ]
     in
