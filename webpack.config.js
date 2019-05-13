@@ -9,7 +9,7 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 module.exports = {
     entry: [
         './src/index.js',
-        './src/scss/main.scss'
+        './src/sass/main.sass'
     ],
 
     output: {
@@ -26,7 +26,7 @@ module.exports = {
                 loader: process.env.NODE_ENV === 'production' ? 'elm-webpack-loader?verbose=true&optimize=true' : 'elm-webpack-loader?verbose=true'
             },
             {
-                test: /\.(scss|css)$/,
+                test: /\.(sass|scss|css)$/,
                 loader: [
                     { loader: MiniCssExtractPlugin.loader },
                     'css-loader',
@@ -38,7 +38,7 @@ module.exports = {
                 loader: 'url-loader?limit=10000&mimetype=application/font-woff'
             },
             {
-                test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                test: /\.(ttf|eot|svg|png)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader'
             }
         ],

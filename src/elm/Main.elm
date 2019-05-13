@@ -1,9 +1,8 @@
 module Main exposing (main)
 
 import Browser exposing (Document)
-import Html exposing (Html, button, div, img, text)
-import Html.Attributes exposing (src)
-import Html.Events exposing (onClick)
+import Html exposing (Html, a, div, img, text)
+import Html.Attributes exposing (class, href, src)
 
 
 main =
@@ -15,8 +14,7 @@ type alias Model =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = NoOp
 
 
 init : () -> ( Model, Cmd Msg )
@@ -26,28 +24,39 @@ init _ =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        Increment ->
-            ( model + 1, Cmd.none )
-
-        Decrement ->
-            ( model - 1, Cmd.none )
+    ( model, Cmd.none )
 
 
 view : Model -> Document Msg
 view model =
     let
         html =
-            [ div []
-                [ button [ onClick Decrement ] [ text "-" ]
-                , div [] [ text (String.fromInt model) ]
-                , button [ onClick Increment ] [ text "+" ]
-                ]
+            [ header
+            , div [ class "ui main text container" ]
+                []
             ]
     in
     { title = "Elm Webpack Boilerplate"
     , body = html
     }
+
+
+header : Html Msg
+header =
+    div [ class "ui fixed inverted menu" ]
+        [ div [ class "ui container" ]
+            [ a [ href "#", class "header item" ]
+                [ img [ class "logo", src "/img/logo.svg" ] []
+                , text "Registry"
+                ]
+            , div [ class "right menu" ]
+                [ a [ href "#", class " item" ]
+                    [ text "Log in" ]
+                , a [ href "#", class " item" ]
+                    [ text "Sign up" ]
+                ]
+            ]
+        ]
 
 
 subscriptions : Model -> Sub Msg
