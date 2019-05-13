@@ -48,7 +48,8 @@ module.exports = {
 
     plugins: [
         new HtmlWebpackPlugin({
-            title: 'Registry'
+            title: 'Registry',
+            template: 'src/index.ejs'
         }),
         new MiniCssExtractPlugin({
             filename: '[name].[chunkhash].css',

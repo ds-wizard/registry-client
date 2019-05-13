@@ -1,7 +1,14 @@
-'use strict';
+'use strict'
 
-var program = require('./elm/Main.elm');
+var program = require('./elm/Main.elm')
+
+function getApiUrl() {
+    if (window.registry && window.registry['apiUrl']) return window.registry['apiUrl']
+    return 'http://localhost:3000'
+}
 
 var app = program.Elm.Main.init({
-    flags: {}
-});
+    flags: {
+        apiUrl: getApiUrl()
+    }
+})

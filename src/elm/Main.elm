@@ -3,8 +3,9 @@ module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Common.AppState as AppState exposing (AppState)
-import Html exposing (Html, a, div, img, text)
+import Html exposing (Html, a, div, i, img, p, text)
 import Html.Attributes exposing (class, href, src)
+import Json.Decode as D
 import Routing
 import Screens.ConfirmSignup as ConfirmSignup
 import Screens.Index as Index
@@ -50,11 +51,11 @@ type Msg
     | OrganizationDetailMsg OrganizationDetail.Msg
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : D.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
     ( { route = Routing.toRoute url
       , key = key
-      , appState = AppState.init "http://localhost:3000"
+      , appState = AppState.init flags
       , indexModel = Index.init
       , kmDetailModel = KMDetail.init
       , signupModel = Signup.init
@@ -141,27 +142,31 @@ view : Model -> Document Msg
 view model =
     let
         content =
-            case model.route of
-                Routing.Index ->
-                    Html.map IndexMsg <| Index.view model.indexModel
+            if not model.appState.valid then
+                misconfigured
 
-                Routing.KMDetail _ _ ->
-                    Html.map KMDetailMsg <| KMDetail.view model.kmDetailModel
+            else
+                case model.route of
+                    Routing.Index ->
+                        Html.map IndexMsg <| Index.view model.indexModel
 
-                Routing.Signup ->
-                    Html.map SignupMsg <| Signup.view model.signupModel
+                    Routing.KMDetail _ _ ->
+                        Html.map KMDetailMsg <| KMDetail.view model.kmDetailModel
 
-                Routing.ConfirmSignup _ _ ->
-                    Html.map ConfirmSignupMsg <| ConfirmSignup.view model.confirmSignupModel
+                    Routing.Signup ->
+                        Html.map SignupMsg <| Signup.view model.signupModel
 
-                Routing.Login ->
-                    Html.map LoginMsg <| Login.view model.loginModel
+                    Routing.ConfirmSignup _ _ ->
+                        Html.map ConfirmSignupMsg <| ConfirmSignup.view model.confirmSignupModel
 
-                Routing.OrganizationDetail _ ->
-                    Html.map OrganizationDetailMsg <| OrganizationDetail.view model.organizationDetailModel
+                    Routing.Login ->
+                        Html.map LoginMsg <| Login.view model.loginModel
 
-                Routing.NotFound ->
-                    div [] [ text "Not found" ]
+                    Routing.OrganizationDetail _ ->
+                        Html.map OrganizationDetailMsg <| OrganizationDetail.view model.organizationDetailModel
+
+                    Routing.NotFound ->
+                        div [] [ text "Not found" ]
 
         html =
             [ header
@@ -188,6 +193,17 @@ header =
                 , a [ href <| Routing.toString Routing.Signup, class " item" ]
                     [ text "Sign up" ]
                 ]
+            ]
+        ]
+
+
+misconfigured : Html msg
+misconfigured =
+    div [ class "ui icon negative message" ]
+        [ i [ class "ban icon" ] []
+        , div [ class "content" ]
+            [ div [ class "header" ] [ text "Configuration Error" ]
+            , p [] [ text "Application is not configured correctly and cannot run." ]
             ]
         ]
 
