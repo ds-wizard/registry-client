@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
+import Common.AppState as AppState exposing (AppState)
 import Html exposing (Html, a, div, img, text)
 import Html.Attributes exposing (class, href, src)
 import Routing
@@ -28,6 +29,7 @@ main =
 type alias Model =
     { route : Routing.Route
     , key : Nav.Key
+    , appState : AppState
     , indexModel : Index.Model
     , kmDetailModel : KMDetail.Model
     , signupModel : Signup.Model
@@ -52,6 +54,7 @@ init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( { route = Routing.toRoute url
       , key = key
+      , appState = AppState.init "http://localhost:3000"
       , indexModel = Index.init
       , kmDetailModel = KMDetail.init
       , signupModel = Signup.init
@@ -100,7 +103,7 @@ update msg model =
         SignupMsg signupMsg ->
             let
                 ( newSignupModel, cmd ) =
-                    Signup.update signupMsg model.signupModel
+                    Signup.update signupMsg model.appState model.signupModel
             in
             ( { model | signupModel = newSignupModel }
             , Cmd.map SignupMsg cmd
