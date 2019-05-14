@@ -6,7 +6,7 @@ import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, string, top)
 
 type Route
     = Index
-    | KMDetail String String
+    | KMDetail String String String
     | Signup
     | ConfirmSignup String String
     | Login
@@ -18,7 +18,7 @@ routeParser : Parser (Route -> a) a
 routeParser =
     oneOf
         [ map Index top
-        , map KMDetail (s "km" </> string </> string)
+        , map KMDetail (s "km" </> string </> string </> string)
         , map Signup (s "signup")
         , map ConfirmSignup (s "signup" </> string </> string)
         , map Login (s "login")
@@ -37,8 +37,8 @@ toString route =
         Index ->
             "/"
 
-        KMDetail orgId kmId ->
-            "/km/" ++ orgId ++ "/" ++ kmId
+        KMDetail orgId kmId version ->
+            "/km/" ++ orgId ++ "/" ++ kmId ++ "/" ++ version
 
         Signup ->
             "/signup"

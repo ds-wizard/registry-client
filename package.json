@@ -6,6 +6,7 @@
     "build": "rm -rf dist && NODE_ENV=production webpack -p"
   },
   "devDependencies": {
+    "bootstrap": "^4.3.1",
     "copy-webpack-plugin": "^4.6.0",
     "css-loader": "^2.1.1",
     "elm": "^0.19.0",
@@ -16,7 +17,6 @@
     "node-sass": "^4.11.0",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "sass-loader": "^7.1.0",
-    "semantic-ui-sass": "^2.4.1",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
     "webpack": "^4.29.6",

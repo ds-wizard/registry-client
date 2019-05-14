@@ -1,20 +1,27 @@
-$icons-font-path: '~semantic-ui-sass/icons'
-$flags-image-path: '~semantic-ui-sass/images'
-$import-google-fonts: false
-//$font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto
-@import '~semantic-ui-sass/semantic-ui'
+@import "~bootstrap/scss/bootstrap"
+
+body
+    margin-top: 100px
+
+    &>.container
+        max-width: 960px
+
+.navbar-nav
+    flex-direction: row
+
+    .nav-link
+        padding-right: .5rem
+        padding-left: .5rem
+
+.navbar-brand
+    .logo
+        height: 30px
+        margin-right: 10px
 
 
-.ui.menu
-    .item
-        img.logo
-            margin-right: 1em
+h1 + form
+    margin-top: 2rem
 
-.main.container
-    padding-top: 5em
-    max-width: 960px !important
 
-.KMDetail
-    .ui.basic.segment
-        margin-right: 337px !important
-        padding: 0
+.btn-with-loader
+    min-width: 100px

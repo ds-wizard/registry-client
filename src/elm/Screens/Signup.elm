@@ -8,12 +8,14 @@ module Screens.Signup exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
-import Common.FormView as FormView
 import Common.Requests as Requests
+import Common.View.ActionButton as ActionButton
+import Common.View.FormGroup as FormGroup
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, h1, i, p, text)
+import Html exposing (Html, div, form, h1, h4, p, text)
 import Html.Attributes exposing (class)
+import Html.Events exposing (onSubmit)
 import Http
 import Result exposing (Result)
 import Utils exposing (validateRegex)
@@ -104,34 +106,31 @@ view model =
 
 successView : Html Msg
 successView =
-    div []
-        [ div [ class "ui icon positive message" ]
-            [ i [ class "check circle outline icon" ] []
-            , div [ class "content" ]
-                [ div [ class "header" ] [ text "Sign up successful" ]
-                , p [] [ text "Check your email address for the activation link." ]
-                ]
-            ]
+    div [ class "alert alert-success" ]
+        [ h4 [ class "alert-heading" ] [ text "Sign up successful" ]
+        , p [] [ text "Check your email address for the activation link." ]
         ]
 
 
 formView : Model -> Html Msg
 formView model =
+    let
+        error =
+            if ActionResult.isError model.signingUp then
+                div [ class "alert alert-danger" ]
+                    [ text "Something went wrong while submitting the form." ]
+
+            else
+                text ""
+    in
     div []
-        [ h1 [ class "ui header" ] [ text "Sign up" ]
-        , FormView.form
-            { loading = ActionResult.isLoading model.signingUp
-            , error = ActionResult.isError model.signingUp
-            , submitMsg = FormMsg Form.Submit
-            }
-            [ div [ class "ui error message" ]
-                [ div [ class "header" ] [ text "Sign up failed" ]
-                , p [] [ text "Something went wrong while submitting the form." ]
-                ]
-            , FormView.input { label = "Organization ID", field = "organizationId", tagger = FormMsg } model.form
-            , FormView.input { label = "Organization Name", field = "name", tagger = FormMsg } model.form
-            , FormView.input { label = "Email", field = "email", tagger = FormMsg } model.form
-            , FormView.textarea { label = "Organization Description", field = "description", tagger = FormMsg } model.form
-            , FormView.submit { label = "Sign Up" }
+        [ h1 [] [ text "Sign up" ]
+        , form [ onSubmit <| FormMsg Form.Submit ]
+            [ error
+            , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
+            , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
+            , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
+            , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
+            , ActionButton.submit ( "Sign up", model.signingUp )
             ]
         ]

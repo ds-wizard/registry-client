@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Common.AppState as AppState exposing (AppState)
-import Html exposing (Html, a, div, i, img, p, text)
+import Html exposing (Html, a, div, h4, i, img, li, p, text, ul)
 import Html.Attributes exposing (class, href, src)
 import Json.Decode as D
 import Routing
@@ -150,7 +150,7 @@ view model =
                     Routing.Index ->
                         Html.map IndexMsg <| Index.view model.indexModel
 
-                    Routing.KMDetail _ _ ->
+                    Routing.KMDetail _ _ _ ->
                         Html.map KMDetailMsg <| KMDetail.view model.kmDetailModel
 
                     Routing.Signup ->
@@ -170,7 +170,7 @@ view model =
 
         html =
             [ header
-            , div [ class "ui main container" ]
+            , div [ class "container" ]
                 [ content ]
             ]
     in
@@ -181,17 +181,23 @@ view model =
 
 header : Html Msg
 header =
-    div [ class "ui fixed inverted menu" ]
-        [ div [ class "ui container" ]
-            [ a [ href <| Routing.toString Routing.Index, class "header item" ]
+    div [ class "navbar navbar-expand-lg fixed-top navbar-light bg-light" ]
+        [ div [ class "container" ]
+            [ a [ class "navbar-brand", href <| Routing.toString Routing.Index ]
                 [ img [ class "logo", src "/img/logo.svg" ] []
                 , text "Registry"
                 ]
-            , div [ class "right menu" ]
-                [ a [ href <| Routing.toString Routing.Login, class " item" ]
-                    [ text "Log in" ]
-                , a [ href <| Routing.toString Routing.Signup, class " item" ]
-                    [ text "Sign up" ]
+            , div []
+                [ ul [ class "nav navbar-nav ml-auto" ]
+                    [ li [ class "nav-item" ]
+                        [ a [ href <| Routing.toString Routing.Login, class "nav-link" ]
+                            [ text "Log in" ]
+                        ]
+                    , li [ class "nav-item" ]
+                        [ a [ href <| Routing.toString Routing.Signup, class "nav-link" ]
+                            [ text "Sign up" ]
+                        ]
+                    ]
                 ]
             ]
         ]
@@ -199,12 +205,9 @@ header =
 
 misconfigured : Html msg
 misconfigured =
-    div [ class "ui icon negative message" ]
-        [ i [ class "ban icon" ] []
-        , div [ class "content" ]
-            [ div [ class "header" ] [ text "Configuration Error" ]
-            , p [] [ text "Application is not configured correctly and cannot run." ]
-            ]
+    div [ class "alert alert-danger" ]
+        [ h4 [ class "alert-heading" ] [ text "Configuration Error" ]
+        , p [] [ text "Application is not configured correctly and cannot run." ]
         ]
 
 

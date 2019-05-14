@@ -6,7 +6,7 @@ module Screens.Index exposing
     , view
     )
 
-import Html exposing (Html, a, div, h1, p, span, text)
+import Html exposing (Html, a, div, h1, h5, p, small, span, text)
 import Html.Attributes exposing (class, href)
 
 
@@ -31,21 +31,19 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h1 [ class "ui header" ] [ text "Knowledge Models" ]
-        , div [ class "ui relaxed divided items" ]
+        [ div [ class "list-group list-group-flush" ]
             [ viewItem, viewItem, viewItem, viewItem ]
         ]
 
 
 viewItem : Html Msg
 viewItem =
-    div [ class "item" ]
-        [ div [ class "content" ]
-            [ a [ href "/km/orgId/kmId", class "header" ] [ text "Knowledge Model Name" ]
-            , div [ class "meta" ]
-                [ span [] [ text "Organization Name" ] ]
-            , div [ class "description" ]
-                [ p [] [ text "This is a sample knowledge model with a couple of chapters." ]
+    div [ class "list-group-item flex-column align-items-start" ]
+        [ div [ class "d-flex justify-content-between" ]
+            [ h5 [ class "mb-1" ]
+                [ a [ href "/km/orgId/kmId/latest" ] [ text "Knowledge Model Name" ]
                 ]
+            , small [] [ text "Organization Name" ]
             ]
+        , p [] [ text "This is a sample knowledge model with a couple of chapters." ]
         ]
