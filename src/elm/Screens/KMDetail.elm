@@ -6,7 +6,7 @@ module Screens.KMDetail exposing
     , view
     )
 
-import Html exposing (Html, code, div, h1, h4, h5, li, p, text, ul)
+import Html exposing (Html, div, h5, li, p, text, ul)
 import Html.Attributes exposing (class)
 import Markdown
 

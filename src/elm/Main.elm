@@ -53,18 +53,17 @@ type Msg
 
 init : D.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
-    ( { route = Routing.toRoute url
-      , key = key
-      , appState = AppState.init flags
-      , indexModel = Index.init
-      , kmDetailModel = KMDetail.init
-      , signupModel = Signup.init
-      , confirmSignupModel = ConfirmSignup.init
-      , loginModel = Login.init
-      , organizationDetailModel = OrganizationDetail.init
-      }
-    , Cmd.none
-    )
+    initChildModel
+        { route = Routing.toRoute url
+        , key = key
+        , appState = AppState.init flags
+        , indexModel = Index.initEmpty
+        , kmDetailModel = KMDetail.init
+        , signupModel = Signup.init
+        , confirmSignupModel = ConfirmSignup.init
+        , loginModel = Login.init
+        , organizationDetailModel = OrganizationDetail.init
+        }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -79,9 +78,7 @@ update msg model =
                     ( model, Nav.load href )
 
         UrlChanged url ->
-            ( { model | route = Routing.toRoute url }
-            , Cmd.none
-            )
+            initChildModel { model | route = Routing.toRoute url }
 
         IndexMsg indexMsg ->
             let
@@ -136,6 +133,22 @@ update msg model =
             ( { model | organizationDetailModel = newOrganizationDetailModel }
             , Cmd.map OrganizationDetailMsg cmd
             )
+
+
+initChildModel : Model -> ( Model, Cmd Msg )
+initChildModel model =
+    case model.route of
+        Routing.Index ->
+            let
+                ( newIndexModel, indexCmd ) =
+                    Index.init model.appState
+            in
+            ( { model | indexModel = newIndexModel }
+            , Cmd.map IndexMsg indexCmd
+            )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> Document Msg

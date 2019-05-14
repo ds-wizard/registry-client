@@ -1,4 +1,6 @@
 @import "~bootstrap/scss/bootstrap"
+@import "mixins"
+@import "animations"
 
 body
     margin-top: 100px
@@ -25,3 +27,11 @@ h1 + form
 
 .btn-with-loader
     min-width: 100px
+
+
+.animation-fade-in
+    opacity: 0
+    @include animation(fadeIn, ease-in, 1)
+    @include animation-duration(1s)
+    @include animation-delay(.4s)
+    @include animation-fill-mode(forwards)
