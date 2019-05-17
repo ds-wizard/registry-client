@@ -81,5 +81,5 @@ viewItem package =
                 ]
             , small [] [ text package.organization.name ]
             ]
-        , p [] [ text package.shortDescription ]
+        , p [] [ text package.description ]
         ]

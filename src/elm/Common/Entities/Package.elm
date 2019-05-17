@@ -12,7 +12,7 @@ type alias Package =
     { name : String
     , kmId : String
     , version : String
-    , shortDescription : String
+    , description : String
     , organization : Organization
     }
 
@@ -23,5 +23,5 @@ decoder =
         |> D.required "name" D.string
         |> D.required "kmId" D.string
         |> D.required "version" D.string
-        |> D.required "shortDescription" D.string
+        |> D.required "description" D.string
         |> D.required "organization" Organization.decoder
