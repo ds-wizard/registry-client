@@ -8,7 +8,7 @@ type Route
     = Index
     | KMDetail String
     | Signup
-    | ConfirmSignup String String
+    | SignupConfirmation String String
     | Login
     | OrganizationDetail String
     | NotFound
@@ -20,7 +20,7 @@ routeParser =
         [ map Index top
         , map KMDetail (s "km" </> string)
         , map Signup (s "signup")
-        , map ConfirmSignup (s "signup-confirmation" </> string </> string)
+        , map SignupConfirmation (s "signup-confirmation" </> string </> string)
         , map Login (s "login")
         , map OrganizationDetail (s "organization" </> string)
         ]
@@ -43,7 +43,7 @@ toString route =
         Signup ->
             "/signup"
 
-        ConfirmSignup orgId hash ->
+        SignupConfirmation orgId hash ->
             "/signup-confirmation/" ++ orgId ++ "/" ++ hash
 
         Login ->

@@ -31,13 +31,18 @@ type alias Model =
     { route : Routing.Route
     , key : Nav.Key
     , appState : AppState
-    , indexModel : Index.Model
-    , kmDetailModel : KMDetail.Model
-    , signupModel : Signup.Model
-    , signupConfirmationModel : SignupConfirmation.Model
-    , loginModel : Login.Model
-    , organizationDetailModel : OrganizationDetail.Model
+    , screenModel : ScreenModel
     }
+
+
+type ScreenModel
+    = IndexModel Index.Model
+    | KMDetailModel KMDetail.Model
+    | LoginModel Login.Model
+    | OrganizationDetailModel OrganizationDetail.Model
+    | SignupModel Signup.Model
+    | SignupConfirmationModel SignupConfirmation.Model
+    | NotFoundModel
 
 
 type Msg
@@ -46,7 +51,7 @@ type Msg
     | IndexMsg Index.Msg
     | KMDetailMsg KMDetail.Msg
     | SignupMsg Signup.Msg
-    | ConfirmSignupMsg SignupConfirmation.Msg
+    | SignupConfirmationMsg SignupConfirmation.Msg
     | LoginMsg Login.Msg
     | OrganizationDetailMsg OrganizationDetail.Msg
 
@@ -57,19 +62,14 @@ init flags url key =
         { route = Routing.toRoute url
         , key = key
         , appState = AppState.init flags
-        , indexModel = Index.initEmpty
-        , kmDetailModel = KMDetail.initEmpty
-        , signupModel = Signup.init
-        , signupConfirmationModel = SignupConfirmation.initEmpty
-        , loginModel = Login.init
-        , organizationDetailModel = OrganizationDetail.init
+        , screenModel = NotFoundModel
         }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        LinkedClicked urlRequest ->
+    case ( msg, model.screenModel ) of
+        ( LinkedClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
                     ( model, Nav.pushUrl model.key (Url.toString url) )
@@ -77,50 +77,53 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        UrlChanged url ->
+        ( UrlChanged url, _ ) ->
             initChildModel { model | route = Routing.toRoute url }
 
-        IndexMsg indexMsg ->
-            ( { model | indexModel = Index.update indexMsg model.indexModel }
+        ( IndexMsg indexMsg, IndexModel indexModel ) ->
+            ( { model | screenModel = IndexModel <| Index.update indexMsg indexModel }
             , Cmd.none
             )
 
-        KMDetailMsg kmDetailMsg ->
-            ( { model | kmDetailModel = KMDetail.update kmDetailMsg model.kmDetailModel }
+        ( KMDetailMsg kmDetailMsg, KMDetailModel kmDetailModel ) ->
+            ( { model | screenModel = KMDetailModel <| KMDetail.update kmDetailMsg kmDetailModel }
             , Cmd.none
             )
 
-        SignupMsg signupMsg ->
+        ( SignupMsg signupMsg, SignupModel signupModel ) ->
             let
                 ( newSignupModel, cmd ) =
-                    Signup.update signupMsg model.appState model.signupModel
+                    Signup.update signupMsg model.appState signupModel
             in
-            ( { model | signupModel = newSignupModel }
+            ( { model | screenModel = SignupModel newSignupModel }
             , Cmd.map SignupMsg cmd
             )
 
-        ConfirmSignupMsg confirmSignupMsg ->
-            ( { model | signupConfirmationModel = SignupConfirmation.update confirmSignupMsg model.signupConfirmationModel }
+        ( SignupConfirmationMsg confirmSignupMsg, SignupConfirmationModel signupConfirmationModel ) ->
+            ( { model | screenModel = SignupConfirmationModel <| SignupConfirmation.update confirmSignupMsg signupConfirmationModel }
             , Cmd.none
             )
 
-        LoginMsg loginMsg ->
+        ( LoginMsg loginMsg, LoginModel loginModel ) ->
             let
                 ( newLoginModel, cmd ) =
-                    Login.update loginMsg model.loginModel
+                    Login.update loginMsg loginModel
             in
-            ( { model | loginModel = newLoginModel }
+            ( { model | screenModel = LoginModel <| newLoginModel }
             , Cmd.map LoginMsg cmd
             )
 
-        OrganizationDetailMsg organizationDetailMsg ->
+        ( OrganizationDetailMsg organizationDetailMsg, OrganizationDetailModel organizationDetailModel ) ->
             let
                 ( newOrganizationDetailModel, cmd ) =
-                    OrganizationDetail.update organizationDetailMsg model.organizationDetailModel
+                    OrganizationDetail.update organizationDetailMsg organizationDetailModel
             in
-            ( { model | organizationDetailModel = newOrganizationDetailModel }
+            ( { model | screenModel = OrganizationDetailModel newOrganizationDetailModel }
             , Cmd.map OrganizationDetailMsg cmd
             )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 initChildModel : Model -> ( Model, Cmd Msg )
@@ -128,33 +131,50 @@ initChildModel model =
     case model.route of
         Routing.Index ->
             let
-                ( newIndexModel, indexCmd ) =
+                ( indexModel, indexCmd ) =
                     Index.init model.appState
             in
-            ( { model | indexModel = newIndexModel }
+            ( { model | screenModel = IndexModel indexModel }
             , Cmd.map IndexMsg indexCmd
             )
 
         Routing.KMDetail pkgId ->
             let
-                ( newKmDetailModel, kmDetailCmd ) =
+                ( kmDetailModel, kmDetailCmd ) =
                     KMDetail.init model.appState pkgId
             in
-            ( { model | kmDetailModel = newKmDetailModel }
+            ( { model | screenModel = KMDetailModel kmDetailModel }
             , Cmd.map KMDetailMsg kmDetailCmd
             )
 
-        Routing.ConfirmSignup organizationId hash ->
-            let
-                ( newSignupConfirmationModel, signupConfirmationCmd ) =
-                    SignupConfirmation.init model.appState organizationId hash
-            in
-            ( { model | signupConfirmationModel = newSignupConfirmationModel }
-            , Cmd.map ConfirmSignupMsg signupConfirmationCmd
+        Routing.Signup ->
+            ( { model | screenModel = SignupModel Signup.init }
+            , Cmd.none
             )
 
-        _ ->
-            ( model, Cmd.none )
+        Routing.SignupConfirmation organizationId hash ->
+            let
+                ( signupConfirmationModel, signupConfirmationCmd ) =
+                    SignupConfirmation.init model.appState organizationId hash
+            in
+            ( { model | screenModel = SignupConfirmationModel signupConfirmationModel }
+            , Cmd.map SignupConfirmationMsg signupConfirmationCmd
+            )
+
+        Routing.Login ->
+            ( { model | screenModel = LoginModel Login.init }
+            , Cmd.none
+            )
+
+        Routing.OrganizationDetail _ ->
+            ( { model | screenModel = OrganizationDetailModel OrganizationDetail.init }
+            , Cmd.none
+            )
+
+        Routing.NotFound ->
+            ( { model | screenModel = NotFoundModel }
+            , Cmd.none
+            )
 
 
 view : Model -> Document Msg
@@ -165,26 +185,26 @@ view model =
                 misconfigured
 
             else
-                case model.route of
-                    Routing.Index ->
-                        Html.map IndexMsg <| Index.view model.indexModel
+                case model.screenModel of
+                    IndexModel indexModel ->
+                        Html.map IndexMsg <| Index.view indexModel
 
-                    Routing.KMDetail _ ->
-                        Html.map KMDetailMsg <| KMDetail.view model.kmDetailModel
+                    KMDetailModel kmDetailModel ->
+                        Html.map KMDetailMsg <| KMDetail.view kmDetailModel
 
-                    Routing.Signup ->
-                        Html.map SignupMsg <| Signup.view model.signupModel
+                    SignupModel signupModel ->
+                        Html.map SignupMsg <| Signup.view signupModel
 
-                    Routing.ConfirmSignup _ _ ->
-                        Html.map ConfirmSignupMsg <| SignupConfirmation.view model.signupConfirmationModel
+                    SignupConfirmationModel signupConfirmationModel ->
+                        Html.map SignupConfirmationMsg <| SignupConfirmation.view signupConfirmationModel
 
-                    Routing.Login ->
-                        Html.map LoginMsg <| Login.view model.loginModel
+                    LoginModel loginModel ->
+                        Html.map LoginMsg <| Login.view loginModel
 
-                    Routing.OrganizationDetail _ ->
-                        Html.map OrganizationDetailMsg <| OrganizationDetail.view model.organizationDetailModel
+                    OrganizationDetailModel organizationDetailModel ->
+                        Html.map OrganizationDetailMsg <| OrganizationDetail.view organizationDetailModel
 
-                    Routing.NotFound ->
+                    NotFoundModel ->
                         div [] [ text "Not found" ]
 
         html =
