@@ -33,8 +33,7 @@ initEmpty =
 
 init : AppState -> ( Model, Cmd Msg )
 init appState =
-    ( { packages = Loading
-      }
+    ( initEmpty
     , Requests.getPackages appState GetPackagesCompleted
     )
 
@@ -68,11 +67,7 @@ viewItem : Package -> Html Msg
 viewItem package =
     let
         packageLink =
-            Routing.toString <|
-                Routing.KMDetail
-                    package.organization.organizationId
-                    package.kmId
-                    "latest"
+            Routing.toString <| Routing.KMDetail package.id
     in
     div [ class "list-group-item flex-column align-items-start" ]
         [ div [ class "d-flex justify-content-between" ]

@@ -58,7 +58,7 @@ init flags url key =
         , key = key
         , appState = AppState.init flags
         , indexModel = Index.initEmpty
-        , kmDetailModel = KMDetail.init
+        , kmDetailModel = KMDetail.initEmpty
         , signupModel = Signup.init
         , confirmSignupModel = ConfirmSignup.init
         , loginModel = Login.init
@@ -147,6 +147,15 @@ initChildModel model =
             , Cmd.map IndexMsg indexCmd
             )
 
+        Routing.KMDetail pkgId ->
+            let
+                ( newKmDetailModel, kmDetailCmd ) =
+                    KMDetail.init model.appState pkgId
+            in
+            ( { model | kmDetailModel = newKmDetailModel }
+            , Cmd.map KMDetailMsg kmDetailCmd
+            )
+
         _ ->
             ( model, Cmd.none )
 
@@ -163,7 +172,7 @@ view model =
                     Routing.Index ->
                         Html.map IndexMsg <| Index.view model.indexModel
 
-                    Routing.KMDetail _ _ _ ->
+                    Routing.KMDetail _ ->
                         Html.map KMDetailMsg <| KMDetail.view model.kmDetailModel
 
                     Routing.Signup ->

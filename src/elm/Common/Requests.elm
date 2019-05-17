@@ -1,7 +1,8 @@
-module Common.Requests exposing (getPackages, postOrganization)
+module Common.Requests exposing (getPackage, getPackages, postOrganization)
 
 import Common.AppState exposing (AppState)
 import Common.Entities.Package as Package exposing (Package)
+import Common.Entities.PackageDetail as PackageDetail exposing (PackageDetail)
 import Http
 import Json.Decode as D
 import Json.Encode as E
@@ -38,4 +39,12 @@ getPackages appState msg =
     Http.get
         { url = appState.apiUrl ++ "/packages/unique"
         , expect = Http.expectJson msg (D.list Package.decoder)
+        }
+
+
+getPackage : AppState -> String -> (Result Http.Error PackageDetail -> msg) -> Cmd msg
+getPackage appState pkgId msg =
+    Http.get
+        { url = appState.apiUrl ++ "/packages/" ++ pkgId
+        , expect = Http.expectJson msg PackageDetail.decoder
         }
