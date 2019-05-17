@@ -27,7 +27,7 @@ postOrganization organization appState msg =
                 ]
     in
     Http.post
-        { url = appState.apiUrl ++ "/organization"
+        { url = appState.apiUrl ++ "/organizations"
         , body = Http.jsonBody body
         , expect = Http.expectWhatever msg
         }
