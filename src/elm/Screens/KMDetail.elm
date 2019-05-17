@@ -23,8 +23,9 @@ type alias Model =
     { package : ActionResult PackageDetail }
 
 
-type Msg
-    = GetPackageCompleted (Result Http.Error PackageDetail)
+setPackage : ActionResult PackageDetail -> Model -> Model
+setPackage package model =
+    { model | package = package }
 
 
 initEmpty : Model
@@ -39,16 +40,15 @@ init appState packageId =
     )
 
 
+type Msg
+    = GetPackageCompleted (Result Http.Error PackageDetail)
+
+
 update : Msg -> Model -> Model
-update msg model =
+update msg =
     case msg of
         GetPackageCompleted result ->
-            case result of
-                Ok package ->
-                    { model | package = Success package }
-
-                Err _ ->
-                    { model | package = Error "Unable to get package." }
+            ActionResult.apply setPackage "Unable to get package." result
 
 
 view : Model -> Html Msg

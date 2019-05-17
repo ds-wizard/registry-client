@@ -22,8 +22,9 @@ type alias Model =
     { packages : ActionResult (List Package) }
 
 
-type Msg
-    = GetPackagesCompleted (Result Http.Error (List Package))
+setPackages : ActionResult (List Package) -> Model -> Model
+setPackages packages model =
+    { model | packages = packages }
 
 
 initEmpty : Model
@@ -38,16 +39,15 @@ init appState =
     )
 
 
+type Msg
+    = GetPackagesCompleted (Result Http.Error (List Package))
+
+
 update : Msg -> Model -> Model
-update msg model =
+update msg =
     case msg of
         GetPackagesCompleted result ->
-            case result of
-                Ok packages ->
-                    { model | packages = Success packages }
-
-                Err _ ->
-                    { model | packages = Error "Unable to get packages." }
+            ActionResult.apply setPackages "Unable to get packages." result
 
 
 view : Model -> Html Msg

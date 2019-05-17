@@ -21,8 +21,9 @@ type alias Model =
     { organization : ActionResult OrganizationDetail }
 
 
-type Msg
-    = PutOrganizationCompleted (Result Http.Error OrganizationDetail)
+setOrganization : ActionResult OrganizationDetail -> Model -> Model
+setOrganization organization model =
+    { model | organization = organization }
 
 
 initEmpty : Model
@@ -43,16 +44,15 @@ init appState organizationId hash =
     )
 
 
+type Msg
+    = PutOrganizationCompleted (Result Http.Error OrganizationDetail)
+
+
 update : Msg -> Model -> Model
-update msg model =
+update msg =
     case msg of
         PutOrganizationCompleted result ->
-            case result of
-                Ok organizationDetail ->
-                    { model | organization = Success organizationDetail }
-
-                Err _ ->
-                    { model | organization = Error "Unable to activate your organization account." }
+            ActionResult.apply setOrganization "Unable to activate your organization account." result
 
 
 view : Model -> Html Msg

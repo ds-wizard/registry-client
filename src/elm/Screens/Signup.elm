@@ -27,6 +27,18 @@ type alias Model =
     }
 
 
+setSigningUp : ActionResult () -> Model -> Model
+setSigningUp signingUp model =
+    { model | signingUp = signingUp }
+
+
+init : Model
+init =
+    { form = initSignupForm
+    , signingUp = Unset
+    }
+
+
 type alias SignupForm =
     { organizationId : String
     , name : String
@@ -54,13 +66,6 @@ type Msg
     | PostOrganizationCompleted (Result Http.Error ())
 
 
-init : Model
-init =
-    { form = initSignupForm
-    , signingUp = Unset
-    }
-
-
 update : Msg -> AppState -> Model -> ( Model, Cmd Msg )
 update msg appState model =
     case msg of
@@ -68,15 +73,7 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         PostOrganizationCompleted result ->
-            ( { model
-                | signingUp =
-                    case result of
-                        Ok _ ->
-                            Success ()
-
-                        Err _ ->
-                            Error ""
-              }
+            ( ActionResult.apply setSigningUp "" result model
             , Cmd.none
             )
 
