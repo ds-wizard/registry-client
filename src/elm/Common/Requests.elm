@@ -1,6 +1,7 @@
-module Common.Requests exposing (getPackage, getPackages, postOrganization)
+module Common.Requests exposing (getPackage, getPackages, postOrganization, putOrganizationState)
 
 import Common.AppState exposing (AppState)
+import Common.Entities.OrganizationDetail as OrganizationDetail exposing (OrganizationDetail)
 import Common.Entities.Package as Package exposing (Package)
 import Common.Entities.PackageDetail as PackageDetail exposing (PackageDetail)
 import Http
@@ -31,6 +32,30 @@ postOrganization organization appState msg =
         { url = appState.apiUrl ++ "/organizations"
         , body = Http.jsonBody body
         , expect = Http.expectWhatever msg
+        }
+
+
+putOrganizationState :
+    { organizationId : String
+    , hash : String
+    , active : Bool
+    }
+    -> AppState
+    -> (Result Http.Error OrganizationDetail -> msg)
+    -> Cmd msg
+putOrganizationState data appState msg =
+    let
+        body =
+            E.object [ ( "active", E.bool data.active ) ]
+    in
+    Http.request
+        { method = "PUT"
+        , headers = []
+        , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId ++ "/state?hash=" ++ data.hash
+        , body = Http.jsonBody body
+        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , timeout = Nothing
+        , tracker = Nothing
         }
 
 

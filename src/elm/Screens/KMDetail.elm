@@ -39,16 +39,16 @@ init appState packageId =
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Model
 update msg model =
     case msg of
         GetPackageCompleted result ->
             case result of
                 Ok package ->
-                    ( { model | package = Success package }, Cmd.none )
+                    { model | package = Success package }
 
                 Err _ ->
-                    ( { model | package = Error "Unable to get package." }, Cmd.none )
+                    { model | package = Error "Unable to get package." }
 
 
 view : Model -> Html Msg
@@ -93,8 +93,8 @@ viewDetail package =
                 ]
 
         viewSupportedMetamodel =
-            [ h5 [] [ text "Supported metamodel" ]
-            , p [] [ text <| "Since " ++ String.fromInt package.metamodelVersion ]
+            [ h5 [] [ text "Metamodel version" ]
+            , p [] [ text <| String.fromInt package.metamodelVersion ]
             ]
 
         viewParentKnowledgeModel =

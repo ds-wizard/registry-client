@@ -7,12 +7,12 @@ import Html exposing (Html, a, div, h4, i, img, li, p, text, ul)
 import Html.Attributes exposing (class, href, src)
 import Json.Decode as D
 import Routing
-import Screens.ConfirmSignup as ConfirmSignup
 import Screens.Index as Index
 import Screens.KMDetail as KMDetail
 import Screens.Login as Login
 import Screens.OrganizationDetail as OrganizationDetail
 import Screens.Signup as Signup
+import Screens.SignupConfirmation as SignupConfirmation
 import Url
 
 
@@ -34,7 +34,7 @@ type alias Model =
     , indexModel : Index.Model
     , kmDetailModel : KMDetail.Model
     , signupModel : Signup.Model
-    , confirmSignupModel : ConfirmSignup.Model
+    , signupConfirmationModel : SignupConfirmation.Model
     , loginModel : Login.Model
     , organizationDetailModel : OrganizationDetail.Model
     }
@@ -46,7 +46,7 @@ type Msg
     | IndexMsg Index.Msg
     | KMDetailMsg KMDetail.Msg
     | SignupMsg Signup.Msg
-    | ConfirmSignupMsg ConfirmSignup.Msg
+    | ConfirmSignupMsg SignupConfirmation.Msg
     | LoginMsg Login.Msg
     | OrganizationDetailMsg OrganizationDetail.Msg
 
@@ -60,7 +60,7 @@ init flags url key =
         , indexModel = Index.initEmpty
         , kmDetailModel = KMDetail.initEmpty
         , signupModel = Signup.init
-        , confirmSignupModel = ConfirmSignup.init
+        , signupConfirmationModel = SignupConfirmation.initEmpty
         , loginModel = Login.init
         , organizationDetailModel = OrganizationDetail.init
         }
@@ -81,21 +81,13 @@ update msg model =
             initChildModel { model | route = Routing.toRoute url }
 
         IndexMsg indexMsg ->
-            let
-                ( newIndexModel, cmd ) =
-                    Index.update indexMsg model.indexModel
-            in
-            ( { model | indexModel = newIndexModel }
-            , Cmd.map IndexMsg cmd
+            ( { model | indexModel = Index.update indexMsg model.indexModel }
+            , Cmd.none
             )
 
         KMDetailMsg kmDetailMsg ->
-            let
-                ( newKmDetailModel, cmd ) =
-                    KMDetail.update kmDetailMsg model.kmDetailModel
-            in
-            ( { model | kmDetailModel = newKmDetailModel }
-            , Cmd.map KMDetailMsg cmd
+            ( { model | kmDetailModel = KMDetail.update kmDetailMsg model.kmDetailModel }
+            , Cmd.none
             )
 
         SignupMsg signupMsg ->
@@ -108,12 +100,8 @@ update msg model =
             )
 
         ConfirmSignupMsg confirmSignupMsg ->
-            let
-                ( newConfirmSignupModel, cmd ) =
-                    ConfirmSignup.update confirmSignupMsg model.confirmSignupModel
-            in
-            ( { model | confirmSignupModel = newConfirmSignupModel }
-            , Cmd.map ConfirmSignupMsg cmd
+            ( { model | signupConfirmationModel = SignupConfirmation.update confirmSignupMsg model.signupConfirmationModel }
+            , Cmd.none
             )
 
         LoginMsg loginMsg ->
@@ -156,6 +144,15 @@ initChildModel model =
             , Cmd.map KMDetailMsg kmDetailCmd
             )
 
+        Routing.ConfirmSignup organizationId hash ->
+            let
+                ( newSignupConfirmationModel, signupConfirmationCmd ) =
+                    SignupConfirmation.init model.appState organizationId hash
+            in
+            ( { model | signupConfirmationModel = newSignupConfirmationModel }
+            , Cmd.map ConfirmSignupMsg signupConfirmationCmd
+            )
+
         _ ->
             ( model, Cmd.none )
 
@@ -179,7 +176,7 @@ view model =
                         Html.map SignupMsg <| Signup.view model.signupModel
 
                     Routing.ConfirmSignup _ _ ->
-                        Html.map ConfirmSignupMsg <| ConfirmSignup.view model.confirmSignupModel
+                        Html.map ConfirmSignupMsg <| SignupConfirmation.view model.signupConfirmationModel
 
                     Routing.Login ->
                         Html.map LoginMsg <| Login.view model.loginModel

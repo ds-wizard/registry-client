@@ -12,7 +12,7 @@ import Common.AppState exposing (AppState)
 import Common.Entities.Package exposing (Package)
 import Common.Requests as Requests
 import Common.View.Page as Page
-import Html exposing (Html, a, div, h1, h5, p, small, span, text)
+import Html exposing (Html, a, div, h5, p, small, text)
 import Html.Attributes exposing (class, href)
 import Http
 import Routing
@@ -38,16 +38,16 @@ init appState =
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Model
 update msg model =
     case msg of
         GetPackagesCompleted result ->
             case result of
                 Ok packages ->
-                    ( { model | packages = Success packages }, Cmd.none )
+                    { model | packages = Success packages }
 
                 Err _ ->
-                    ( { model | packages = Error "Unable to get packages." }, Cmd.none )
+                    { model | packages = Error "Unable to get packages." }
 
 
 view : Model -> Html Msg

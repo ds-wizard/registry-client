@@ -1,4 +1,4 @@
-module Utils exposing (flip, validateRegex)
+module Utils exposing (validateRegex)
 
 import Form.Error as Error exposing (ErrorValue(..))
 import Form.Validate as Validate exposing (Validation, mapError)
@@ -15,8 +15,3 @@ validateRegex regex =
 createRegex : String -> Regex
 createRegex regex =
     Maybe.withDefault Regex.never <| Regex.fromString regex
-
-
-flip : (a -> b -> c) -> b -> a -> c
-flip fn a b =
-    fn b a
