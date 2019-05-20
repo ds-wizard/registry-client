@@ -8,13 +8,14 @@ module Pages.ForgottenToken exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState as AppState exposing (AppState)
-import Common.Html exposing (emptyNode)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
+import Common.View.FormResult as FormResult
+import Common.View.Page as Page
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, form, h1, h4, p, text)
+import Html exposing (Html, div, form, h1, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onSubmit)
 import Http
@@ -99,31 +100,22 @@ view model =
 
 successView : Html Msg
 successView =
-    div [ class "alert alert-success" ]
-        [ h4 [ class "alert-heading" ] [ text "Token recovery successful" ]
-        , p [] [ text "Check your email address for the recovery link." ]
-        ]
+    Page.illustratedMessage
+        { image = "confirmation"
+        , heading = "Token recovery successful!"
+        , msg = "Check your email address for the recovery link."
+        }
 
 
 formView : Model -> Html Msg
 formView model =
-    let
-        error =
-            case model.submitting of
-                Error err ->
-                    div [ class "alert alert-danger" ]
-                        [ text err ]
-
-                _ ->
-                    emptyNode
-    in
     div []
         [ h1 [] [ text "Forgotten Token" ]
         , form [ onSubmit <| FormMsg Form.Submit ]
-            [ error
+            [ FormResult.errorOnlyView model.submitting
             , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
             , p [ class "text-muted" ]
-                [ text "Enter the email you used to register you organization." ]
+                [ text "Enter the email you used to register your organization." ]
             , ActionButton.submit ( "Submit", model.submitting )
             ]
         ]

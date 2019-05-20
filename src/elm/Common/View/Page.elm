@@ -1,8 +1,8 @@
-module Common.View.Page exposing (actionResultView)
+module Common.View.Page exposing (actionResultView, illustratedMessage)
 
 import ActionResult exposing (ActionResult(..))
-import Html exposing (Html, div, h4, p, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, h1, img, p, text)
+import Html.Attributes exposing (class, src)
 
 
 actionResultView : (a -> Html msg) -> ActionResult a -> Html msg
@@ -26,7 +26,24 @@ loader =
 
 error : String -> Html msg
 error err =
-    div [ class "alert alert-danger" ]
-        [ h4 [ class "alert-heading" ] [ text "Error" ]
-        , p [] [ text err ]
+    illustratedMessage
+        { image = "cancel"
+        , heading = "Error"
+        , msg = err
+        }
+
+
+illustratedMessage :
+    { image : String
+    , heading : String
+    , msg : String
+    }
+    -> Html msg
+illustratedMessage { image, heading, msg } =
+    div [ class "full-page-illustrated-message" ]
+        [ img [ src <| "/img/illustrations/undraw_" ++ image ++ ".svg" ] []
+        , div []
+            [ h1 [] [ text heading ]
+            , p [] [ text msg ]
+            ]
         ]

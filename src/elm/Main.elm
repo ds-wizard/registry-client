@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Common.AppState as AppState exposing (AppState)
-import Html exposing (Html, a, div, h4, i, img, li, p, text, ul)
+import Common.View.Page as Page
+import Html exposing (Html, a, div, img, li, text, ul)
 import Html.Attributes exposing (class, href, src)
 import Html.Events exposing (onClick)
 import Json.Decode as D
@@ -13,7 +14,7 @@ import Pages.ForgottenTokenConfirmation as ForgottenTokenConfirmation
 import Pages.Index as Index
 import Pages.KMDetail as KMDetail
 import Pages.Login as Login
-import Pages.OrganizationDetail as OrganizationDetail
+import Pages.Organization as Organization
 import Pages.Signup as Signup
 import Pages.SignupConfirmation as SignupConfirmation
 import Ports
@@ -22,6 +23,7 @@ import Url
 import Utils exposing (dispatch)
 
 
+main : Program D.Value Model Msg
 main =
     Browser.application
         { init = init
@@ -47,7 +49,7 @@ type PageModel
     | IndexModel Index.Model
     | KMDetailModel KMDetail.Model
     | LoginModel Login.Model
-    | OrganizationDetailModel OrganizationDetail.Model
+    | OrganizationModel Organization.Model
     | SignupModel Signup.Model
     | SignupConfirmationModel SignupConfirmation.Model
     | NotFoundModel
@@ -62,7 +64,7 @@ type Msg
     | IndexMsg Index.Msg
     | KMDetailMsg KMDetail.Msg
     | LoginMsg Login.Msg
-    | OrganizationDetailMsg OrganizationDetail.Msg
+    | OrganizationMsg Organization.Msg
     | SignupMsg Signup.Msg
     | SignupConfirmationMsg SignupConfirmation.Msg
 
@@ -96,7 +98,7 @@ update msg model =
                 ( route, encodedCredentials ) =
                     case mbCredentials of
                         Just credentials ->
-                            ( Routing.OrganizationDetail
+                            ( Routing.Organization
                             , AppState.encodeCredentials credentials
                             )
 
@@ -151,13 +153,13 @@ update msg model =
             , cmd
             )
 
-        ( OrganizationDetailMsg organizationDetailMsg, OrganizationDetailModel organizationDetailModel ) ->
+        ( OrganizationMsg organizationMsg, OrganizationModel organizationModel ) ->
             let
-                ( newOrganizationDetailModel, cmd ) =
-                    OrganizationDetail.update organizationDetailMsg model.appState organizationDetailModel
+                ( newOrganizationModel, cmd ) =
+                    Organization.update organizationMsg model.appState organizationModel
             in
-            ( { model | pageModel = OrganizationDetailModel newOrganizationDetailModel }
-            , Cmd.map OrganizationDetailMsg cmd
+            ( { model | pageModel = OrganizationModel newOrganizationModel }
+            , Cmd.map OrganizationMsg cmd
             )
 
         ( SignupMsg signupMsg, SignupModel signupModel ) ->
@@ -182,18 +184,20 @@ initChildModel : Model -> ( Model, Cmd Msg )
 initChildModel model =
     case model.route of
         Routing.ForgottenToken ->
-            ( { model | pageModel = ForgottenTokenModel ForgottenToken.init }
-            , Cmd.none
-            )
+            withOrganizationRedirect
+                ( { model | pageModel = ForgottenTokenModel ForgottenToken.init }
+                , Cmd.none
+                )
 
         Routing.ForgottenTokenConfirmation organizationId hash ->
             let
                 ( forgottenTokenConfirmationModel, forgottenTokenConfirmationCmd ) =
                     ForgottenTokenConfirmation.init model.appState organizationId hash
             in
-            ( { model | pageModel = ForgottenTokenConfirmationModel forgottenTokenConfirmationModel }
-            , Cmd.map ForgottenTokenConfirmationMsg forgottenTokenConfirmationCmd
-            )
+            withOrganizationRedirect
+                ( { model | pageModel = ForgottenTokenConfirmationModel forgottenTokenConfirmationModel }
+                , Cmd.map ForgottenTokenConfirmationMsg forgottenTokenConfirmationCmd
+                )
 
         Routing.Index ->
             let
@@ -214,19 +218,20 @@ initChildModel model =
             )
 
         Routing.Login ->
-            ( { model | pageModel = LoginModel Login.init }
-            , Cmd.none
-            )
+            withOrganizationRedirect
+                ( { model | pageModel = LoginModel Login.init }
+                , Cmd.none
+                )
 
-        Routing.OrganizationDetail ->
+        Routing.Organization ->
             case model.appState.credentials of
                 Just credentials ->
                     let
-                        ( organizationDetailModel, organizationDetailCmd ) =
-                            OrganizationDetail.init model.appState credentials
+                        ( organizationModel, organizationCmd ) =
+                            Organization.init model.appState credentials
                     in
-                    ( { model | pageModel = OrganizationDetailModel organizationDetailModel }
-                    , Cmd.map OrganizationDetailMsg organizationDetailCmd
+                    ( { model | pageModel = OrganizationModel organizationModel }
+                    , Cmd.map OrganizationMsg organizationCmd
                     )
 
                 Nothing ->
@@ -235,18 +240,20 @@ initChildModel model =
                     )
 
         Routing.Signup ->
-            ( { model | pageModel = SignupModel Signup.init }
-            , Cmd.none
-            )
+            withOrganizationRedirect
+                ( { model | pageModel = SignupModel Signup.init }
+                , Cmd.none
+                )
 
         Routing.SignupConfirmation organizationId hash ->
             let
                 ( signupConfirmationModel, signupConfirmationCmd ) =
                     SignupConfirmation.init model.appState organizationId hash
             in
-            ( { model | pageModel = SignupConfirmationModel signupConfirmationModel }
-            , Cmd.map SignupConfirmationMsg signupConfirmationCmd
-            )
+            withOrganizationRedirect
+                ( { model | pageModel = SignupConfirmationModel signupConfirmationModel }
+                , Cmd.map SignupConfirmationMsg signupConfirmationCmd
+                )
 
         Routing.NotFound ->
             ( { model | pageModel = NotFoundModel }
@@ -254,12 +261,26 @@ initChildModel model =
             )
 
 
+withOrganizationRedirect : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+withOrganizationRedirect ( model, cmd ) =
+    case model.appState.credentials of
+        Just _ ->
+            ( model, Nav.pushUrl model.key <| Routing.toString Routing.Organization )
+
+        Nothing ->
+            ( model, cmd )
+
+
 view : Model -> Document Msg
 view model =
     let
         content =
             if not model.appState.valid then
-                misconfigured
+                Page.illustratedMessage
+                    { image = "bug_fixing"
+                    , heading = "Configuration Error"
+                    , msg = "Application is not configured correctly and cannot run."
+                    }
 
             else
                 case model.pageModel of
@@ -278,8 +299,8 @@ view model =
                     LoginModel loginModel ->
                         Html.map LoginMsg <| Login.view loginModel
 
-                    OrganizationDetailModel organizationDetailModel ->
-                        Html.map OrganizationDetailMsg <| OrganizationDetail.view organizationDetailModel
+                    OrganizationModel organizationDetailModel ->
+                        Html.map OrganizationMsg <| Organization.view organizationDetailModel
 
                     SignupModel signupModel ->
                         Html.map SignupMsg <| Signup.view signupModel
@@ -288,7 +309,11 @@ view model =
                         Html.map SignupConfirmationMsg <| SignupConfirmation.view signupConfirmationModel
 
                     NotFoundModel ->
-                        div [] [ text "Not found" ]
+                        Page.illustratedMessage
+                            { image = "page_not_found"
+                            , heading = "Not Found"
+                            , msg = "The page you are looking for does not exist."
+                            }
 
         html =
             [ header model.appState
@@ -326,7 +351,7 @@ loggedInHeaderNavigation =
         [ ul [ class "nav navbar-nav ml-auto" ]
             [ li [ class "nav-item" ]
                 [ a
-                    [ href <| Routing.toString Routing.OrganizationDetail
+                    [ href <| Routing.toString Routing.Organization
                     , class "nav-link"
                     ]
                     [ text "Profile" ]
@@ -355,14 +380,6 @@ publicHeaderNavigation =
                     [ text "Sign up" ]
                 ]
             ]
-        ]
-
-
-misconfigured : Html msg
-misconfigured =
-    div [ class "alert alert-danger" ]
-        [ h4 [ class "alert-heading" ] [ text "Configuration Error" ]
-        , p [] [ text "Application is not configured correctly and cannot run." ]
         ]
 
 

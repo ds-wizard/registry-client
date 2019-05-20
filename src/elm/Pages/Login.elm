@@ -98,11 +98,6 @@ handleFormMsg tagger formMsg appState model =
 
 view : Model -> Html Msg
 view model =
-    div [] [ formView model ]
-
-
-formView : Model -> Html Msg
-formView model =
     div []
         [ h1 [] [ text "Log in" ]
         , form [ onSubmit <| FormMsg Form.Submit ]

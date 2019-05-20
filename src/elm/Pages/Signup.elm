@@ -8,7 +8,6 @@ module Pages.Signup exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
-import Common.Html exposing (emptyNode)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup

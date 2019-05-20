@@ -10,7 +10,7 @@ type Route
     | Index
     | KMDetail String
     | Login
-    | OrganizationDetail
+    | Organization
     | Signup
     | SignupConfirmation String String
     | NotFound
@@ -24,7 +24,7 @@ routeParser =
         , map Index top
         , map KMDetail (s "km" </> string)
         , map Login (s "login")
-        , map OrganizationDetail (s "organization")
+        , map Organization (s "organization")
         , map Signup (s "signup")
         , map SignupConfirmation (s "signup" </> string </> string)
         ]
@@ -53,7 +53,7 @@ toString route =
         Login ->
             "/login"
 
-        OrganizationDetail ->
+        Organization ->
             "/organization"
 
         Signup ->

@@ -1,4 +1,4 @@
-module Pages.OrganizationDetail exposing
+module Pages.Organization exposing
     ( Model
     , Msg
     , init
@@ -96,7 +96,7 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         GetOrganizationCompleted result ->
-            ( ActionResult.apply setOrganization "Unable to get organization detail" result model
+            ( ActionResult.apply setOrganization "Unable to get organization detail." result model
             , Cmd.none
             )
 
@@ -106,12 +106,12 @@ update msg appState model =
                     case result of
                         Ok organization ->
                             { model
-                                | saving = Success "Your changes has been saved"
+                                | saving = Success "Your changes has been saved."
                                 , form = initOrganizationForm <| organizationFormInitials organization
                             }
 
                         Err _ ->
-                            { model | saving = Error "Unable to save changes" }
+                            { model | saving = Error "Unable to save changes." }
             in
             ( newModel, Cmd.none )
 

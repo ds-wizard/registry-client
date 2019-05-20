@@ -1,4 +1,14 @@
-module Common.Requests exposing (getOrganization, getPackage, getPackages, getToken, postForgottenTokenActionKey, postOrganization, putOrganization, putOrganizationState, putOrganizationToken)
+module Common.Requests exposing
+    ( getOrganization
+    , getPackage
+    , getPackages
+    , getToken
+    , postForgottenTokenActionKey
+    , postOrganization
+    , putOrganization
+    , putOrganizationState
+    , putOrganizationToken
+    )
 
 import Common.AppState exposing (AppState)
 import Common.Entities.OrganizationDetail as OrganizationDetail exposing (OrganizationDetail)
