@@ -5,15 +5,19 @@ import Browser.Navigation as Nav
 import Common.AppState as AppState exposing (AppState)
 import Html exposing (Html, a, div, h4, i, img, li, p, text, ul)
 import Html.Attributes exposing (class, href, src)
+import Html.Events exposing (onClick)
 import Json.Decode as D
+import Json.Encode as E
+import Pages.Index as Index
+import Pages.KMDetail as KMDetail
+import Pages.Login as Login
+import Pages.OrganizationDetail as OrganizationDetail
+import Pages.Signup as Signup
+import Pages.SignupConfirmation as SignupConfirmation
+import Ports
 import Routing
-import Screens.Index as Index
-import Screens.KMDetail as KMDetail
-import Screens.Login as Login
-import Screens.OrganizationDetail as OrganizationDetail
-import Screens.Signup as Signup
-import Screens.SignupConfirmation as SignupConfirmation
 import Url
+import Utils exposing (dispatch)
 
 
 main =
@@ -31,11 +35,11 @@ type alias Model =
     { route : Routing.Route
     , key : Nav.Key
     , appState : AppState
-    , screenModel : ScreenModel
+    , pageModel : PageModel
     }
 
 
-type ScreenModel
+type PageModel
     = IndexModel Index.Model
     | KMDetailModel KMDetail.Model
     | LoginModel Login.Model
@@ -48,6 +52,7 @@ type ScreenModel
 type Msg
     = UrlChanged Url.Url
     | LinkedClicked UrlRequest
+    | SetCredentials (Maybe AppState.Credentials)
     | IndexMsg Index.Msg
     | KMDetailMsg KMDetail.Msg
     | SignupMsg Signup.Msg
@@ -62,13 +67,13 @@ init flags url key =
         { route = Routing.toRoute url
         , key = key
         , appState = AppState.init flags
-        , screenModel = NotFoundModel
+        , pageModel = NotFoundModel
         }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model.screenModel ) of
+    case ( msg, model.pageModel ) of
         ( LinkedClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
@@ -80,13 +85,34 @@ update msg model =
         ( UrlChanged url, _ ) ->
             initChildModel { model | route = Routing.toRoute url }
 
+        ( SetCredentials mbCredentials, _ ) ->
+            let
+                ( route, encodedCredentials ) =
+                    case mbCredentials of
+                        Just credentials ->
+                            ( Routing.OrganizationDetail credentials.organizationId
+                            , AppState.encodeCredentials credentials
+                            )
+
+                        Nothing ->
+                            ( Routing.Index
+                            , E.null
+                            )
+            in
+            ( { model | appState = AppState.setCredentials mbCredentials model.appState }
+            , Cmd.batch
+                [ Nav.pushUrl model.key <| Routing.toString route
+                , Ports.saveCredentials encodedCredentials
+                ]
+            )
+
         ( IndexMsg indexMsg, IndexModel indexModel ) ->
-            ( { model | screenModel = IndexModel <| Index.update indexMsg indexModel }
+            ( { model | pageModel = IndexModel <| Index.update indexMsg indexModel }
             , Cmd.none
             )
 
         ( KMDetailMsg kmDetailMsg, KMDetailModel kmDetailModel ) ->
-            ( { model | screenModel = KMDetailModel <| KMDetail.update kmDetailMsg kmDetailModel }
+            ( { model | pageModel = KMDetailModel <| KMDetail.update kmDetailMsg kmDetailModel }
             , Cmd.none
             )
 
@@ -95,22 +121,28 @@ update msg model =
                 ( newSignupModel, cmd ) =
                     Signup.update signupMsg model.appState signupModel
             in
-            ( { model | screenModel = SignupModel newSignupModel }
+            ( { model | pageModel = SignupModel newSignupModel }
             , Cmd.map SignupMsg cmd
             )
 
         ( SignupConfirmationMsg confirmSignupMsg, SignupConfirmationModel signupConfirmationModel ) ->
-            ( { model | screenModel = SignupConfirmationModel <| SignupConfirmation.update confirmSignupMsg signupConfirmationModel }
+            ( { model | pageModel = SignupConfirmationModel <| SignupConfirmation.update confirmSignupMsg signupConfirmationModel }
             , Cmd.none
             )
 
         ( LoginMsg loginMsg, LoginModel loginModel ) ->
             let
                 ( newLoginModel, cmd ) =
-                    Login.update loginMsg loginModel
+                    Login.update
+                        { tagger = LoginMsg
+                        , loginCmd = \c -> dispatch <| SetCredentials <| Just c
+                        }
+                        loginMsg
+                        model.appState
+                        loginModel
             in
-            ( { model | screenModel = LoginModel <| newLoginModel }
-            , Cmd.map LoginMsg cmd
+            ( { model | pageModel = LoginModel <| newLoginModel }
+            , cmd
             )
 
         ( OrganizationDetailMsg organizationDetailMsg, OrganizationDetailModel organizationDetailModel ) ->
@@ -118,7 +150,7 @@ update msg model =
                 ( newOrganizationDetailModel, cmd ) =
                     OrganizationDetail.update organizationDetailMsg organizationDetailModel
             in
-            ( { model | screenModel = OrganizationDetailModel newOrganizationDetailModel }
+            ( { model | pageModel = OrganizationDetailModel newOrganizationDetailModel }
             , Cmd.map OrganizationDetailMsg cmd
             )
 
@@ -134,7 +166,7 @@ initChildModel model =
                 ( indexModel, indexCmd ) =
                     Index.init model.appState
             in
-            ( { model | screenModel = IndexModel indexModel }
+            ( { model | pageModel = IndexModel indexModel }
             , Cmd.map IndexMsg indexCmd
             )
 
@@ -143,12 +175,12 @@ initChildModel model =
                 ( kmDetailModel, kmDetailCmd ) =
                     KMDetail.init model.appState pkgId
             in
-            ( { model | screenModel = KMDetailModel kmDetailModel }
+            ( { model | pageModel = KMDetailModel kmDetailModel }
             , Cmd.map KMDetailMsg kmDetailCmd
             )
 
         Routing.Signup ->
-            ( { model | screenModel = SignupModel Signup.init }
+            ( { model | pageModel = SignupModel Signup.init }
             , Cmd.none
             )
 
@@ -157,22 +189,22 @@ initChildModel model =
                 ( signupConfirmationModel, signupConfirmationCmd ) =
                     SignupConfirmation.init model.appState organizationId hash
             in
-            ( { model | screenModel = SignupConfirmationModel signupConfirmationModel }
+            ( { model | pageModel = SignupConfirmationModel signupConfirmationModel }
             , Cmd.map SignupConfirmationMsg signupConfirmationCmd
             )
 
         Routing.Login ->
-            ( { model | screenModel = LoginModel Login.init }
+            ( { model | pageModel = LoginModel Login.init }
             , Cmd.none
             )
 
         Routing.OrganizationDetail _ ->
-            ( { model | screenModel = OrganizationDetailModel OrganizationDetail.init }
+            ( { model | pageModel = OrganizationDetailModel OrganizationDetail.init }
             , Cmd.none
             )
 
         Routing.NotFound ->
-            ( { model | screenModel = NotFoundModel }
+            ( { model | pageModel = NotFoundModel }
             , Cmd.none
             )
 
@@ -185,7 +217,7 @@ view model =
                 misconfigured
 
             else
-                case model.screenModel of
+                case model.pageModel of
                     IndexModel indexModel ->
                         Html.map IndexMsg <| Index.view indexModel
 
@@ -208,7 +240,7 @@ view model =
                         div [] [ text "Not found" ]
 
         html =
-            [ header
+            [ header model.appState
             , div [ class "container" ]
                 [ content ]
             ]
@@ -218,25 +250,61 @@ view model =
     }
 
 
-header : Html Msg
-header =
+header : AppState -> Html Msg
+header appState =
+    let
+        navigation =
+            case appState.credentials of
+                Just credentials ->
+                    loggedInHeaderNavigation credentials
+
+                Nothing ->
+                    publicHeaderNavigation
+    in
     div [ class "navbar navbar-expand-lg fixed-top navbar-light bg-light" ]
         [ div [ class "container" ]
             [ a [ class "navbar-brand", href <| Routing.toString Routing.Index ]
                 [ img [ class "logo", src "/img/logo.svg" ] []
                 , text "Registry"
                 ]
-            , div []
-                [ ul [ class "nav navbar-nav ml-auto" ]
-                    [ li [ class "nav-item" ]
-                        [ a [ href <| Routing.toString Routing.Login, class "nav-link" ]
-                            [ text "Log in" ]
-                        ]
-                    , li [ class "nav-item" ]
-                        [ a [ href <| Routing.toString Routing.Signup, class "nav-link" ]
-                            [ text "Sign up" ]
-                        ]
+            , navigation
+            ]
+        ]
+
+
+loggedInHeaderNavigation : AppState.Credentials -> Html Msg
+loggedInHeaderNavigation credentials =
+    div []
+        [ ul [ class "nav navbar-nav ml-auto" ]
+            [ li [ class "nav-item" ]
+                [ a
+                    [ href <| Routing.toString <| Routing.OrganizationDetail credentials.organizationId
+                    , class "nav-link"
                     ]
+                    [ text "Profile" ]
+                ]
+            , li [ class "nav-item" ]
+                [ a
+                    [ onClick <| SetCredentials Nothing
+                    , class "nav-link"
+                    ]
+                    [ text "Log out" ]
+                ]
+            ]
+        ]
+
+
+publicHeaderNavigation : Html Msg
+publicHeaderNavigation =
+    div []
+        [ ul [ class "nav navbar-nav ml-auto" ]
+            [ li [ class "nav-item" ]
+                [ a [ href <| Routing.toString Routing.Login, class "nav-link" ]
+                    [ text "Log in" ]
+                ]
+            , li [ class "nav-item" ]
+                [ a [ href <| Routing.toString Routing.Signup, class "nav-link" ]
+                    [ text "Sign up" ]
                 ]
             ]
         ]

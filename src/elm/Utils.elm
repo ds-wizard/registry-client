@@ -1,8 +1,9 @@
-module Utils exposing (validateRegex)
+module Utils exposing (dispatch, validateRegex)
 
 import Form.Error as Error exposing (ErrorValue(..))
 import Form.Validate as Validate exposing (Validation, mapError)
 import Regex exposing (Regex)
+import Task
 
 
 validateRegex : String -> Validation e String
@@ -15,3 +16,8 @@ validateRegex regex =
 createRegex : String -> Regex
 createRegex regex =
     Maybe.withDefault Regex.never <| Regex.fromString regex
+
+
+dispatch : a -> Cmd a
+dispatch msg =
+    Task.perform (always msg) (Task.succeed ())

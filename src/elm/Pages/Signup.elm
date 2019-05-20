@@ -1,4 +1,4 @@
-module Screens.Signup exposing
+module Pages.Signup exposing
     ( Model
     , Msg(..)
     , init

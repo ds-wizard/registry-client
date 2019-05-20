@@ -9,6 +9,11 @@ function getApiUrl() {
 
 var app = program.Elm.Main.init({
     flags: {
-        apiUrl: getApiUrl()
+        apiUrl: getApiUrl(),
+        credentials: JSON.parse(localStorage.getItem('credentials'))
     }
+})
+
+app.ports.saveCredentials.subscribe(function (credentials) {
+    localStorage.setItem('credentials', JSON.stringify(credentials))
 })

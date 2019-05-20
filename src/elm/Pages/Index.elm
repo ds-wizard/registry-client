@@ -1,4 +1,4 @@
-module Screens.Index exposing
+module Pages.Index exposing
     ( Model
     , Msg(..)
     , init

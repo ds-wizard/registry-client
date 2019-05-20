@@ -1,4 +1,4 @@
-module Screens.KMDetail exposing
+module Pages.KMDetail exposing
     ( Model
     , Msg(..)
     , init

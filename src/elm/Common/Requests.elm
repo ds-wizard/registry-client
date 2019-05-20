@@ -1,4 +1,4 @@
-module Common.Requests exposing (getPackage, getPackages, postOrganization, putOrganizationState)
+module Common.Requests exposing (getPackage, getPackages, getToken, postOrganization, putOrganizationState)
 
 import Common.AppState exposing (AppState)
 import Common.Entities.OrganizationDetail as OrganizationDetail exposing (OrganizationDetail)
@@ -59,10 +59,29 @@ putOrganizationState data appState msg =
         }
 
 
+getToken :
+    { organizationId : String
+    , token : String
+    }
+    -> AppState
+    -> (Result Http.Error String -> msg)
+    -> Cmd msg
+getToken data appState msg =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" <| "Bearer " ++ data.token ]
+        , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId
+        , body = Http.emptyBody
+        , expect = Http.expectJson msg (D.field "token" D.string)
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
 getPackages : AppState -> (Result Http.Error (List Package) -> msg) -> Cmd msg
 getPackages appState msg =
     Http.get
-        { url = appState.apiUrl ++ "/packages/unique"
+        { url = appState.apiUrl ++ "/packages"
         , expect = Http.expectJson msg (D.list Package.decoder)
         }
 

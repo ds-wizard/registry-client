@@ -1,4 +1,4 @@
-module Screens.OrganizationDetail exposing
+module Pages.OrganizationDetail exposing
     ( Model
     , Msg(..)
     , init

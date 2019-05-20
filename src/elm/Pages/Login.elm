@@ -1,0 +1,121 @@
+module Pages.Login exposing
+    ( Model
+    , Msg(..)
+    , init
+    , update
+    , view
+    )
+
+import ActionResult exposing (ActionResult(..))
+import Common.AppState as AppState exposing (AppState)
+import Common.Requests as Requests
+import Common.View.ActionButton as ActionButton
+import Common.View.FormGroup as FormGroup
+import Form exposing (Form)
+import Form.Validate as Validate exposing (Validation)
+import Html exposing (Html, div, form, h1, text)
+import Html.Attributes exposing (class)
+import Html.Events exposing (onSubmit)
+import Http
+
+
+type alias Model =
+    { form : Form () LoginForm
+    , loggingIn : ActionResult ()
+    }
+
+
+type alias LoginForm =
+    { organizationId : String
+    , token : String
+    }
+
+
+loginFormValidation : Validation e LoginForm
+loginFormValidation =
+    Validate.map2 LoginForm
+        (Validate.field "organizationId" Validate.string)
+        (Validate.field "token" Validate.string)
+
+
+initLoginForm : Form e LoginForm
+initLoginForm =
+    Form.initial [] loginFormValidation
+
+
+type Msg
+    = FormMsg Form.Msg
+    | GetTokenCompleted (Result Http.Error String)
+
+
+init : Model
+init =
+    { form = initLoginForm
+    , loggingIn = Unset
+    }
+
+
+update :
+    { tagger : Msg -> msg
+    , loginCmd : AppState.Credentials -> Cmd msg
+    }
+    -> Msg
+    -> AppState
+    -> Model
+    -> ( Model, Cmd msg )
+update { tagger, loginCmd } msg appState model =
+    case msg of
+        FormMsg formMsg ->
+            handleFormMsg tagger formMsg appState model
+
+        GetTokenCompleted result ->
+            case ( result, Form.getOutput model.form ) of
+                ( Ok _, Just loginForm ) ->
+                    ( model, loginCmd loginForm )
+
+                _ ->
+                    ( { model | loggingIn = Error "Invalid organization ID and token combination." }
+                    , Cmd.none
+                    )
+
+
+handleFormMsg : (Msg -> msg) -> Form.Msg -> AppState -> Model -> ( Model, Cmd msg )
+handleFormMsg tagger formMsg appState model =
+    case ( formMsg, Form.getOutput model.form ) of
+        ( Form.Submit, Just loginForm ) ->
+            ( { model | loggingIn = Loading }
+            , Requests.getToken loginForm appState GetTokenCompleted
+                |> Cmd.map tagger
+            )
+
+        _ ->
+            ( { model | form = Form.update loginFormValidation formMsg model.form }
+            , Cmd.none
+            )
+
+
+view : Model -> Html Msg
+view model =
+    div [] [ formView model ]
+
+
+formView : Model -> Html Msg
+formView model =
+    let
+        error =
+            if ActionResult.isError model.loggingIn then
+                div [ class "alert alert-danger" ]
+                    [ text "Invalid combination of Organization ID and Token." ]
+
+            else
+                text ""
+    in
+    div []
+        [ h1 [] [ text "Log in" ]
+        , form [ onSubmit <| FormMsg Form.Submit ]
+            [ error
+            , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
+            , Html.map FormMsg <| FormGroup.password model.form "token" "Token"
+            , ActionButton.submit ( "Log in", model.loggingIn )
+            ]
+        ]
