@@ -1,6 +1,6 @@
 module Pages.Login exposing
     ( Model
-    , Msg(..)
+    , Msg
     , init
     , update
     , view
@@ -13,10 +13,11 @@ import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, form, h1, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, a, div, form, h1, text)
+import Html.Attributes exposing (class, href)
 import Html.Events exposing (onSubmit)
 import Http
+import Routing
 
 
 type alias Model =
@@ -116,6 +117,9 @@ formView model =
             [ error
             , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
             , Html.map FormMsg <| FormGroup.password model.form "token" "Token"
-            , ActionButton.submit ( "Log in", model.loggingIn )
+            , div [ class "d-flex justify-content-between align-items-center" ]
+                [ ActionButton.submit ( "Log in", model.loggingIn )
+                , a [ href <| Routing.toString Routing.ForgottenToken ] [ text "Forgot your token?" ]
+                ]
             ]
         ]

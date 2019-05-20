@@ -5,24 +5,28 @@ import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, string, top)
 
 
 type Route
-    = Index
+    = ForgottenToken
+    | ForgottenTokenConfirmation String String
+    | Index
     | KMDetail String
-    | Signup
-    | SignupConfirmation String String
     | Login
     | OrganizationDetail String
+    | Signup
+    | SignupConfirmation String String
     | NotFound
 
 
 routeParser : Parser (Route -> a) a
 routeParser =
     oneOf
-        [ map Index top
+        [ map ForgottenToken (s "forgotten-token")
+        , map ForgottenTokenConfirmation (s "forgotten-token" </> string </> string)
+        , map Index top
         , map KMDetail (s "km" </> string)
-        , map Signup (s "signup")
-        , map SignupConfirmation (s "signup-confirmation" </> string </> string)
         , map Login (s "login")
         , map OrganizationDetail (s "organization" </> string)
+        , map Signup (s "signup")
+        , map SignupConfirmation (s "signup" </> string </> string)
         ]
 
 
@@ -34,23 +38,29 @@ toRoute url =
 toString : Route -> String
 toString route =
     case route of
+        ForgottenToken ->
+            "/forgotten-token"
+
+        ForgottenTokenConfirmation orgId hash ->
+            "/forgotten-token/" ++ orgId ++ "/" ++ hash
+
         Index ->
             "/"
 
         KMDetail pkgId ->
             "/km/" ++ pkgId
 
-        Signup ->
-            "/signup"
-
-        SignupConfirmation orgId hash ->
-            "/signup-confirmation/" ++ orgId ++ "/" ++ hash
-
         Login ->
             "/login"
 
         OrganizationDetail orgId ->
             "/organization/" ++ orgId
+
+        Signup ->
+            "/signup"
+
+        SignupConfirmation orgId hash ->
+            "/signup/" ++ orgId ++ "/" ++ hash
 
         _ ->
             "/"

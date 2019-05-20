@@ -1,6 +1,6 @@
 module Pages.Signup exposing
     ( Model
-    , Msg(..)
+    , Msg
     , init
     , update
     , view

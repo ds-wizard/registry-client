@@ -8,6 +8,8 @@ import Html.Attributes exposing (class, href, src)
 import Html.Events exposing (onClick)
 import Json.Decode as D
 import Json.Encode as E
+import Pages.ForgottenToken as ForgottenToken
+import Pages.ForgottenTokenConfirmation as ForgottenTokenConfirmation
 import Pages.Index as Index
 import Pages.KMDetail as KMDetail
 import Pages.Login as Login
@@ -40,7 +42,9 @@ type alias Model =
 
 
 type PageModel
-    = IndexModel Index.Model
+    = ForgottenTokenModel ForgottenToken.Model
+    | ForgottenTokenConfirmationModel ForgottenTokenConfirmation.Model
+    | IndexModel Index.Model
     | KMDetailModel KMDetail.Model
     | LoginModel Login.Model
     | OrganizationDetailModel OrganizationDetail.Model
@@ -53,12 +57,14 @@ type Msg
     = UrlChanged Url.Url
     | LinkedClicked UrlRequest
     | SetCredentials (Maybe AppState.Credentials)
+    | ForgottenTokenMsg ForgottenToken.Msg
+    | ForgottenTokenConfirmationMsg ForgottenTokenConfirmation.Msg
     | IndexMsg Index.Msg
     | KMDetailMsg KMDetail.Msg
-    | SignupMsg Signup.Msg
-    | SignupConfirmationMsg SignupConfirmation.Msg
     | LoginMsg Login.Msg
     | OrganizationDetailMsg OrganizationDetail.Msg
+    | SignupMsg Signup.Msg
+    | SignupConfirmationMsg SignupConfirmation.Msg
 
 
 init : D.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -106,6 +112,20 @@ update msg model =
                 ]
             )
 
+        ( ForgottenTokenMsg forgottenTokenMsg, ForgottenTokenModel forgottenTokenModel ) ->
+            let
+                ( newForgottenTokenModel, forgottenTokenCmd ) =
+                    ForgottenToken.update forgottenTokenMsg model.appState forgottenTokenModel
+            in
+            ( { model | pageModel = ForgottenTokenModel newForgottenTokenModel }
+            , Cmd.map ForgottenTokenMsg forgottenTokenCmd
+            )
+
+        ( ForgottenTokenConfirmationMsg forgottenTokenConfirmationMsg, ForgottenTokenConfirmationModel forgottenTokenConfirmationModel ) ->
+            ( { model | pageModel = ForgottenTokenConfirmationModel <| ForgottenTokenConfirmation.update forgottenTokenConfirmationMsg forgottenTokenConfirmationModel }
+            , Cmd.none
+            )
+
         ( IndexMsg indexMsg, IndexModel indexModel ) ->
             ( { model | pageModel = IndexModel <| Index.update indexMsg indexModel }
             , Cmd.none
@@ -113,20 +133,6 @@ update msg model =
 
         ( KMDetailMsg kmDetailMsg, KMDetailModel kmDetailModel ) ->
             ( { model | pageModel = KMDetailModel <| KMDetail.update kmDetailMsg kmDetailModel }
-            , Cmd.none
-            )
-
-        ( SignupMsg signupMsg, SignupModel signupModel ) ->
-            let
-                ( newSignupModel, cmd ) =
-                    Signup.update signupMsg model.appState signupModel
-            in
-            ( { model | pageModel = SignupModel newSignupModel }
-            , Cmd.map SignupMsg cmd
-            )
-
-        ( SignupConfirmationMsg confirmSignupMsg, SignupConfirmationModel signupConfirmationModel ) ->
-            ( { model | pageModel = SignupConfirmationModel <| SignupConfirmation.update confirmSignupMsg signupConfirmationModel }
             , Cmd.none
             )
 
@@ -154,6 +160,20 @@ update msg model =
             , Cmd.map OrganizationDetailMsg cmd
             )
 
+        ( SignupMsg signupMsg, SignupModel signupModel ) ->
+            let
+                ( newSignupModel, cmd ) =
+                    Signup.update signupMsg model.appState signupModel
+            in
+            ( { model | pageModel = SignupModel newSignupModel }
+            , Cmd.map SignupMsg cmd
+            )
+
+        ( SignupConfirmationMsg confirmSignupMsg, SignupConfirmationModel signupConfirmationModel ) ->
+            ( { model | pageModel = SignupConfirmationModel <| SignupConfirmation.update confirmSignupMsg signupConfirmationModel }
+            , Cmd.none
+            )
+
         _ ->
             ( model, Cmd.none )
 
@@ -161,6 +181,20 @@ update msg model =
 initChildModel : Model -> ( Model, Cmd Msg )
 initChildModel model =
     case model.route of
+        Routing.ForgottenToken ->
+            ( { model | pageModel = ForgottenTokenModel ForgottenToken.init }
+            , Cmd.none
+            )
+
+        Routing.ForgottenTokenConfirmation organizationId hash ->
+            let
+                ( forgottenTokenConfirmationModel, forgottenTokenConfirmationCmd ) =
+                    ForgottenTokenConfirmation.init model.appState organizationId hash
+            in
+            ( { model | pageModel = ForgottenTokenConfirmationModel forgottenTokenConfirmationModel }
+            , Cmd.map ForgottenTokenConfirmationMsg forgottenTokenConfirmationCmd
+            )
+
         Routing.Index ->
             let
                 ( indexModel, indexCmd ) =
@@ -179,6 +213,16 @@ initChildModel model =
             , Cmd.map KMDetailMsg kmDetailCmd
             )
 
+        Routing.Login ->
+            ( { model | pageModel = LoginModel Login.init }
+            , Cmd.none
+            )
+
+        Routing.OrganizationDetail _ ->
+            ( { model | pageModel = OrganizationDetailModel OrganizationDetail.init }
+            , Cmd.none
+            )
+
         Routing.Signup ->
             ( { model | pageModel = SignupModel Signup.init }
             , Cmd.none
@@ -191,16 +235,6 @@ initChildModel model =
             in
             ( { model | pageModel = SignupConfirmationModel signupConfirmationModel }
             , Cmd.map SignupConfirmationMsg signupConfirmationCmd
-            )
-
-        Routing.Login ->
-            ( { model | pageModel = LoginModel Login.init }
-            , Cmd.none
-            )
-
-        Routing.OrganizationDetail _ ->
-            ( { model | pageModel = OrganizationDetailModel OrganizationDetail.init }
-            , Cmd.none
             )
 
         Routing.NotFound ->
@@ -218,23 +252,29 @@ view model =
 
             else
                 case model.pageModel of
+                    ForgottenTokenModel forgottenTokenModel ->
+                        Html.map ForgottenTokenMsg <| ForgottenToken.view forgottenTokenModel
+
+                    ForgottenTokenConfirmationModel forgottenTokenConfirmationModel ->
+                        Html.map ForgottenTokenConfirmationMsg <| ForgottenTokenConfirmation.view forgottenTokenConfirmationModel
+
                     IndexModel indexModel ->
                         Html.map IndexMsg <| Index.view indexModel
 
                     KMDetailModel kmDetailModel ->
                         Html.map KMDetailMsg <| KMDetail.view kmDetailModel
 
-                    SignupModel signupModel ->
-                        Html.map SignupMsg <| Signup.view signupModel
-
-                    SignupConfirmationModel signupConfirmationModel ->
-                        Html.map SignupConfirmationMsg <| SignupConfirmation.view signupConfirmationModel
-
                     LoginModel loginModel ->
                         Html.map LoginMsg <| Login.view loginModel
 
                     OrganizationDetailModel organizationDetailModel ->
                         Html.map OrganizationDetailMsg <| OrganizationDetail.view organizationDetailModel
+
+                    SignupModel signupModel ->
+                        Html.map SignupMsg <| Signup.view signupModel
+
+                    SignupConfirmationModel signupConfirmationModel ->
+                        Html.map SignupConfirmationMsg <| SignupConfirmation.view signupConfirmationModel
 
                     NotFoundModel ->
                         div [] [ text "Not found" ]

@@ -1,4 +1,4 @@
-module Common.Requests exposing (getPackage, getPackages, getToken, postOrganization, putOrganizationState)
+module Common.Requests exposing (getPackage, getPackages, getToken, postForgottenTokenActionKey, postOrganization, putOrganizationState, putOrganizationToken)
 
 import Common.AppState exposing (AppState)
 import Common.Entities.OrganizationDetail as OrganizationDetail exposing (OrganizationDetail)
@@ -7,6 +7,26 @@ import Common.Entities.PackageDetail as PackageDetail exposing (PackageDetail)
 import Http
 import Json.Decode as D
 import Json.Encode as E
+
+
+postForgottenTokenActionKey :
+    { email : String }
+    -> AppState
+    -> (Result Http.Error () -> msg)
+    -> Cmd msg
+postForgottenTokenActionKey { email } appState msg =
+    let
+        body =
+            E.object
+                [ ( "type", E.string "ForgottenTokenActionKey" )
+                , ( "email", E.string email )
+                ]
+    in
+    Http.post
+        { url = appState.apiUrl ++ "/action-keys"
+        , body = Http.jsonBody body
+        , expect = Http.expectWhatever msg
+        }
 
 
 postOrganization :
@@ -53,6 +73,25 @@ putOrganizationState data appState msg =
         , headers = []
         , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId ++ "/state?hash=" ++ data.hash
         , body = Http.jsonBody body
+        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+putOrganizationToken :
+    { organizationId : String
+    , hash : String
+    }
+    -> AppState
+    -> (Result Http.Error OrganizationDetail -> msg)
+    -> Cmd msg
+putOrganizationToken data appState msg =
+    Http.request
+        { method = "PUT"
+        , headers = []
+        , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId ++ "/token?hash=" ++ data.hash
+        , body = Http.emptyBody
         , expect = Http.expectJson msg OrganizationDetail.decoder
         , timeout = Nothing
         , tracker = Nothing

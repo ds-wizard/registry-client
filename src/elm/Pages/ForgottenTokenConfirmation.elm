@@ -1,4 +1,4 @@
-module Pages.SignupConfirmation exposing
+module Pages.ForgottenTokenConfirmation exposing
     ( Model
     , Msg
     , init
@@ -28,25 +28,24 @@ setOrganization organization model =
 init : AppState -> String -> String -> ( Model, Cmd Msg )
 init appState organizationId hash =
     ( { organization = Loading }
-    , Requests.putOrganizationState
+    , Requests.putOrganizationToken
         { organizationId = organizationId
         , hash = hash
-        , active = True
         }
         appState
-        PutOrganizationStateCompleted
+        PutOrganizationTokenCompleted
     )
 
 
 type Msg
-    = PutOrganizationStateCompleted (Result Http.Error OrganizationDetail)
+    = PutOrganizationTokenCompleted (Result Http.Error OrganizationDetail)
 
 
 update : Msg -> Model -> Model
 update msg =
     case msg of
-        PutOrganizationStateCompleted result ->
-            ActionResult.apply setOrganization "Unable to activate your organization account." result
+        PutOrganizationTokenCompleted result ->
+            ActionResult.apply setOrganization "Unable to recover your organization token." result
 
 
 view : Model -> Html Msg
@@ -57,11 +56,11 @@ view model =
 viewOrganization : OrganizationDetail -> Html Msg
 viewOrganization organization =
     div []
-        [ h1 [] [ text "Activated" ]
+        [ h1 [] [ text "Recovered" ]
         , p []
-            [ text "The account for your organization "
+            [ text "A new token for your organization "
             , strong [] [ text organization.name ]
-            , text " has been successfully activated!"
+            , text " has been generated!"
             ]
         , div [ class "alert alert-info" ]
             [ text "You will use the following token for authentication. Save it to a safe place. You will not be able to see it again." ]

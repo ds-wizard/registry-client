@@ -1,6 +1,6 @@
 module Pages.Index exposing
     ( Model
-    , Msg(..)
+    , Msg
     , init
     , initEmpty
     , update
