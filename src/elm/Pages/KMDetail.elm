@@ -2,7 +2,6 @@ module Pages.KMDetail exposing
     ( Model
     , Msg
     , init
-    , initEmpty
     , update
     , view
     )
@@ -28,14 +27,9 @@ setPackage package model =
     { model | package = package }
 
 
-initEmpty : Model
-initEmpty =
-    { package = Loading }
-
-
 init : AppState -> String -> ( Model, Cmd Msg )
 init appState packageId =
-    ( initEmpty
+    ( { package = Loading }
     , Requests.getPackage appState packageId GetPackageCompleted
     )
 

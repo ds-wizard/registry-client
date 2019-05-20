@@ -96,7 +96,7 @@ update msg model =
                 ( route, encodedCredentials ) =
                     case mbCredentials of
                         Just credentials ->
-                            ( Routing.OrganizationDetail credentials.organizationId
+                            ( Routing.OrganizationDetail
                             , AppState.encodeCredentials credentials
                             )
 
@@ -154,7 +154,7 @@ update msg model =
         ( OrganizationDetailMsg organizationDetailMsg, OrganizationDetailModel organizationDetailModel ) ->
             let
                 ( newOrganizationDetailModel, cmd ) =
-                    OrganizationDetail.update organizationDetailMsg organizationDetailModel
+                    OrganizationDetail.update organizationDetailMsg model.appState organizationDetailModel
             in
             ( { model | pageModel = OrganizationDetailModel newOrganizationDetailModel }
             , Cmd.map OrganizationDetailMsg cmd
@@ -218,10 +218,21 @@ initChildModel model =
             , Cmd.none
             )
 
-        Routing.OrganizationDetail _ ->
-            ( { model | pageModel = OrganizationDetailModel OrganizationDetail.init }
-            , Cmd.none
-            )
+        Routing.OrganizationDetail ->
+            case model.appState.credentials of
+                Just credentials ->
+                    let
+                        ( organizationDetailModel, organizationDetailCmd ) =
+                            OrganizationDetail.init model.appState credentials
+                    in
+                    ( { model | pageModel = OrganizationDetailModel organizationDetailModel }
+                    , Cmd.map OrganizationDetailMsg organizationDetailCmd
+                    )
+
+                Nothing ->
+                    ( model
+                    , Nav.pushUrl model.key <| Routing.toString Routing.Login
+                    )
 
         Routing.Signup ->
             ( { model | pageModel = SignupModel Signup.init }
@@ -294,12 +305,9 @@ header : AppState -> Html Msg
 header appState =
     let
         navigation =
-            case appState.credentials of
-                Just credentials ->
-                    loggedInHeaderNavigation credentials
-
-                Nothing ->
-                    publicHeaderNavigation
+            appState.credentials
+                |> Maybe.map (always loggedInHeaderNavigation)
+                |> Maybe.withDefault publicHeaderNavigation
     in
     div [ class "navbar navbar-expand-lg fixed-top navbar-light bg-light" ]
         [ div [ class "container" ]
@@ -312,13 +320,13 @@ header appState =
         ]
 
 
-loggedInHeaderNavigation : AppState.Credentials -> Html Msg
-loggedInHeaderNavigation credentials =
+loggedInHeaderNavigation : Html Msg
+loggedInHeaderNavigation =
     div []
         [ ul [ class "nav navbar-nav ml-auto" ]
             [ li [ class "nav-item" ]
                 [ a
-                    [ href <| Routing.toString <| Routing.OrganizationDetail credentials.organizationId
+                    [ href <| Routing.toString Routing.OrganizationDetail
                     , class "nav-link"
                     ]
                     [ text "Profile" ]

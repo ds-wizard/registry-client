@@ -2,7 +2,6 @@ module Pages.Index exposing
     ( Model
     , Msg
     , init
-    , initEmpty
     , update
     , view
     )
@@ -27,14 +26,9 @@ setPackages packages model =
     { model | packages = packages }
 
 
-initEmpty : Model
-initEmpty =
-    { packages = Loading }
-
-
 init : AppState -> ( Model, Cmd Msg )
 init appState =
-    ( initEmpty
+    ( { packages = Loading }
     , Requests.getPackages appState GetPackagesCompleted
     )
 

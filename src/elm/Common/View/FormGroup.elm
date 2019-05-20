@@ -10,6 +10,7 @@ module Common.View.FormGroup exposing
     , toggle
     )
 
+import Common.Html exposing (emptyNode)
 import Form exposing (Form, InputType(..), Msg(..))
 import Form.Error exposing (ErrorValue(..))
 import Form.Input as Input
@@ -117,7 +118,7 @@ getErrors field labelText =
             ( p [ class "invalid-feedback" ] [ text (toReadable error labelText) ], "is-invalid" )
 
         Nothing ->
-            ( text "", "" )
+            ( emptyNode, "" )
 
 
 toReadable : ErrorValue e -> String -> String

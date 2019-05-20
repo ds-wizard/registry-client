@@ -11,6 +11,7 @@ import Common.AppState as AppState exposing (AppState)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
+import Common.View.FormResult as FormResult
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
 import Html exposing (Html, a, div, form, h1, text)
@@ -102,19 +103,10 @@ view model =
 
 formView : Model -> Html Msg
 formView model =
-    let
-        error =
-            if ActionResult.isError model.loggingIn then
-                div [ class "alert alert-danger" ]
-                    [ text "Invalid combination of Organization ID and Token." ]
-
-            else
-                text ""
-    in
     div []
         [ h1 [] [ text "Log in" ]
         , form [ onSubmit <| FormMsg Form.Submit ]
-            [ error
+            [ FormResult.errorOnlyView model.loggingIn
             , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
             , Html.map FormMsg <| FormGroup.password model.form "token" "Token"
             , div [ class "d-flex justify-content-between align-items-center" ]

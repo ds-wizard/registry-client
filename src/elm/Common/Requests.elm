@@ -1,4 +1,4 @@
-module Common.Requests exposing (getPackage, getPackages, getToken, postForgottenTokenActionKey, postOrganization, putOrganizationState, putOrganizationToken)
+module Common.Requests exposing (getOrganization, getPackage, getPackages, getToken, postForgottenTokenActionKey, postOrganization, putOrganization, putOrganizationState, putOrganizationToken)
 
 import Common.AppState exposing (AppState)
 import Common.Entities.OrganizationDetail as OrganizationDetail exposing (OrganizationDetail)
@@ -55,6 +55,58 @@ postOrganization organization appState msg =
         }
 
 
+putOrganization :
+    { name : String
+    , description : String
+    , email : String
+    }
+    -> AppState
+    -> (Result Http.Error OrganizationDetail -> msg)
+    -> Cmd msg
+putOrganization data appState msg =
+    let
+        body =
+            E.object
+                [ ( "name", E.string data.name )
+                , ( "description", E.string data.description )
+                , ( "email", E.string data.email )
+                ]
+
+        orgId =
+            appState.credentials
+                |> Maybe.map .organizationId
+                |> Maybe.withDefault ""
+    in
+    Http.request
+        { method = "PUT"
+        , headers = authHeadersFromAppState appState
+        , url = appState.apiUrl ++ "/organizations/" ++ orgId
+        , body = Http.jsonBody body
+        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+getOrganization :
+    { organizationId : String
+    , token : String
+    }
+    -> AppState
+    -> (Result Http.Error OrganizationDetail -> msg)
+    -> Cmd msg
+getOrganization { organizationId, token } appState msg =
+    Http.request
+        { method = "GET"
+        , headers = authHeaders token
+        , url = appState.apiUrl ++ "/organizations/" ++ organizationId
+        , body = Http.emptyBody
+        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
 putOrganizationState :
     { organizationId : String
     , hash : String
@@ -108,7 +160,7 @@ getToken :
 getToken data appState msg =
     Http.request
         { method = "GET"
-        , headers = [ Http.header "Authorization" <| "Bearer " ++ data.token ]
+        , headers = authHeaders data.token
         , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId
         , body = Http.emptyBody
         , expect = Http.expectJson msg (D.field "token" D.string)
@@ -131,3 +183,18 @@ getPackage appState pkgId msg =
         { url = appState.apiUrl ++ "/packages/" ++ pkgId
         , expect = Http.expectJson msg PackageDetail.decoder
         }
+
+
+authHeadersFromAppState : AppState -> List Http.Header
+authHeadersFromAppState appState =
+    case appState.credentials of
+        Just credentials ->
+            authHeaders credentials.token
+
+        Nothing ->
+            []
+
+
+authHeaders : String -> List Http.Header
+authHeaders token =
+    [ Http.header "Authorization" <| "Bearer " ++ token ]

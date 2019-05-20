@@ -8,6 +8,7 @@ module Pages.ForgottenToken exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState as AppState exposing (AppState)
+import Common.Html exposing (emptyNode)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
@@ -114,7 +115,7 @@ formView model =
                         [ text err ]
 
                 _ ->
-                    text ""
+                    emptyNode
     in
     div []
         [ h1 [] [ text "Forgotten Token" ]

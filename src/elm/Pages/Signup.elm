@@ -8,9 +8,11 @@ module Pages.Signup exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Html exposing (emptyNode)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
+import Common.View.FormResult as FormResult
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
 import Html exposing (Html, div, form, h1, h4, p, text)
@@ -111,19 +113,10 @@ successView =
 
 formView : Model -> Html Msg
 formView model =
-    let
-        error =
-            if ActionResult.isError model.signingUp then
-                div [ class "alert alert-danger" ]
-                    [ text "Something went wrong while submitting the form." ]
-
-            else
-                text ""
-    in
     div []
         [ h1 [] [ text "Sign up" ]
         , form [ onSubmit <| FormMsg Form.Submit ]
-            [ error
+            [ FormResult.errorOnlyView model.signingUp
             , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
             , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
             , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
