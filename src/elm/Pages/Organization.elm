@@ -137,7 +137,7 @@ view model =
         , form [ onSubmit <| FormMsg Form.Submit ]
             [ FormResult.view model.saving
             , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
-            , Html.map FormMsg <| FormGroup.input model.form "description" "Organization Description"
+            , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
             , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
             , ActionButton.submit ( "Save", model.saving )
             ]
