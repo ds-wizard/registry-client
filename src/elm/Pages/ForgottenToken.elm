@@ -31,6 +31,11 @@ type alias RecoveryForm =
     { email : String }
 
 
+setSubmitting : ActionResult () -> Model -> Model
+setSubmitting submitting model =
+    { model | submitting = submitting }
+
+
 recoveryFormValidation : Validation e RecoveryForm
 recoveryFormValidation =
     Validate.map RecoveryForm
@@ -44,7 +49,7 @@ initRecoveryForm =
 
 type Msg
     = FormMsg Form.Msg
-    | PostRegistrationActionKeyCompleted (Result Http.Error ())
+    | PostForgottenTokenActionKeyCompleted (Result Http.Error ())
 
 
 init : Model
@@ -60,17 +65,8 @@ update msg appState model =
         FormMsg formMsg ->
             handleFormMsg formMsg appState model
 
-        PostRegistrationActionKeyCompleted result ->
-            let
-                submitting =
-                    case result of
-                        Ok _ ->
-                            Success ()
-
-                        Err _ ->
-                            Error "Could not recover token."
-            in
-            ( { model | submitting = submitting }
+        PostForgottenTokenActionKeyCompleted result ->
+            ( ActionResult.apply setSubmitting "Could not recover token." result model
             , Cmd.none
             )
 
@@ -80,7 +76,7 @@ handleFormMsg formMsg appState model =
     case ( formMsg, Form.getOutput model.form ) of
         ( Form.Submit, Just recoveryForm ) ->
             ( { model | submitting = Loading }
-            , Requests.postForgottenTokenActionKey recoveryForm appState PostRegistrationActionKeyCompleted
+            , Requests.postForgottenTokenActionKey recoveryForm appState PostForgottenTokenActionKeyCompleted
             )
 
         _ ->

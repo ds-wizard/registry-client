@@ -12,10 +12,10 @@ import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
 import Common.View.FormResult as FormResult
+import Common.View.Page as Page
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, form, h1, h4, p, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, form, h1, text)
 import Html.Events exposing (onSubmit)
 import Http
 import Result exposing (Result)
@@ -74,7 +74,7 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         PostOrganizationCompleted result ->
-            ( ActionResult.apply setSigningUp "" result model
+            ( ActionResult.apply setSigningUp "Registration was not successful." result model
             , Cmd.none
             )
 
@@ -104,10 +104,11 @@ view model =
 
 successView : Html Msg
 successView =
-    div [ class "alert alert-success" ]
-        [ h4 [ class "alert-heading" ] [ text "Sign up successful" ]
-        , p [] [ text "Check your email address for the activation link." ]
-        ]
+    Page.illustratedMessage
+        { image = "confirmation"
+        , heading = "Sign up successful!"
+        , msg = "Check your email address for the activation link."
+        }
 
 
 formView : Model -> Html Msg
