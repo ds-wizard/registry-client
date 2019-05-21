@@ -98,15 +98,17 @@ handleFormMsg tagger formMsg appState model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "Log in" ]
-        , form [ onSubmit <| FormMsg Form.Submit ]
-            [ FormResult.errorOnlyView model.loggingIn
-            , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
-            , Html.map FormMsg <| FormGroup.password model.form "token" "Token"
-            , div [ class "d-flex justify-content-between align-items-center" ]
-                [ ActionButton.submit ( "Log in", model.loggingIn )
-                , a [ href <| Routing.toString Routing.ForgottenToken ] [ text "Forgot your token?" ]
+    div [ class "card card-form bg-light" ]
+        [ div [ class "card-header" ] [ text "Log in" ]
+        , div [ class "card-body" ]
+            [ form [ onSubmit <| FormMsg Form.Submit ]
+                [ FormResult.errorOnlyView model.loggingIn
+                , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
+                , Html.map FormMsg <| FormGroup.password model.form "token" "Token"
+                , div [ class "d-flex justify-content-between align-items-center" ]
+                    [ ActionButton.submit ( "Log in", model.loggingIn )
+                    , a [ href <| Routing.toString Routing.ForgottenToken ] [ text "Forgot your token?" ]
+                    ]
                 ]
             ]
         ]

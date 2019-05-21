@@ -16,6 +16,7 @@ import Common.View.Page as Page
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
 import Html exposing (Html, div, form, h1, text)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onSubmit)
 import Http
 import Result exposing (Result)
@@ -113,14 +114,16 @@ successView =
 
 formView : Model -> Html Msg
 formView model =
-    div []
-        [ h1 [] [ text "Sign up" ]
-        , form [ onSubmit <| FormMsg Form.Submit ]
-            [ FormResult.errorOnlyView model.signingUp
-            , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
-            , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
-            , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
-            , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
-            , ActionButton.submit ( "Sign up", model.signingUp )
+    div [ class "card card-form bg-light" ]
+        [ div [ class "card-header" ] [ text "Sign up" ]
+        , div [ class "card-body" ]
+            [ form [ onSubmit <| FormMsg Form.Submit ]
+                [ FormResult.errorOnlyView model.signingUp
+                , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
+                , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
+                , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
+                , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
+                , ActionButton.submit ( "Sign up", model.signingUp )
+                ]
             ]
         ]

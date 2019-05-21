@@ -105,13 +105,15 @@ successView =
 
 formView : Model -> Html Msg
 formView model =
-    div []
-        [ h1 [] [ text "Forgotten Token" ]
-        , form [ onSubmit <| FormMsg Form.Submit ]
-            [ FormResult.errorOnlyView model.submitting
-            , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
-            , p [ class "text-muted" ]
-                [ text "Enter the email you used to register your organization." ]
-            , ActionButton.submit ( "Submit", model.submitting )
+    div [ class "card card-form bg-light" ]
+        [ div [ class "card-header" ] [ text "Forgotten Token" ]
+        , div [ class "card-body" ]
+            [ form [ onSubmit <| FormMsg Form.Submit ]
+                [ FormResult.errorOnlyView model.submitting
+                , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
+                , p [ class "text-muted" ]
+                    [ text "Enter the email you used to register your organization." ]
+                , ActionButton.submit ( "Submit", model.submitting )
+                ]
             ]
         ]
