@@ -22,7 +22,7 @@ routeParser =
         [ map ForgottenToken (s "forgotten-token")
         , map ForgottenTokenConfirmation (s "forgotten-token" </> string </> string)
         , map Index top
-        , map KMDetail (s "km" </> string)
+        , map KMDetail (s "knowledge-models" </> string)
         , map Login (s "login")
         , map Organization (s "organization")
         , map Signup (s "signup")
@@ -48,7 +48,7 @@ toString route =
             "/"
 
         KMDetail pkgId ->
-            "/km/" ++ pkgId
+            "/knowledge-models/" ++ pkgId
 
         Login ->
             "/login"
