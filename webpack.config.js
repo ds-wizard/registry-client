@@ -9,7 +9,7 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 module.exports = {
     entry: [
         './src/index.js',
-        './src/sass/main.sass'
+        './src/sass/main.scss'
     ],
 
     output: {

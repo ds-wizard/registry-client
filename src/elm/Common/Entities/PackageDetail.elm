@@ -3,7 +3,7 @@ module Common.Entities.PackageDetail exposing
     , decoder
     )
 
-import Common.Entities.Organization as Organization exposing (Organization)
+import Common.Entities.OrganizationInfo as OrganizationInfo exposing (OrganizationInfo)
 import Json.Decode as D exposing (Decoder)
 import Json.Decode.Pipeline as D
 
@@ -14,7 +14,7 @@ type alias PackageDetail =
     , kmId : String
     , version : String
     , description : String
-    , organization : Organization
+    , organization : OrganizationInfo
     , metamodelVersion : Int
     , parentPackageId : Maybe String
     , readme : String
@@ -30,7 +30,7 @@ decoder =
         |> D.required "kmId" D.string
         |> D.required "version" D.string
         |> D.required "description" D.string
-        |> D.required "organization" Organization.decoder
+        |> D.required "organization" OrganizationInfo.decoder
         |> D.required "metamodelVersion" D.int
         |> D.required "parentPackageId" (D.maybe D.string)
         |> D.required "readme" D.string

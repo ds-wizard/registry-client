@@ -8,10 +8,12 @@ module Pages.KMDetail exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.OrganizationInfo exposing (OrganizationInfo)
 import Common.Entities.PackageDetail exposing (PackageDetail)
 import Common.Requests as Requests
+import Common.View.ItemIcon as ItemIcon
 import Common.View.Page as Page
-import Html exposing (Html, a, code, div, h5, li, p, text, ul)
+import Html exposing (Html, a, br, code, div, h5, li, p, strong, text, ul)
 import Html.Attributes exposing (class, href)
 import Http
 import Markdown
@@ -61,7 +63,7 @@ viewDetail package =
 
         viewPublishedBy =
             [ h5 [] [ text "Published by" ]
-            , p [] [ text package.organization.name ]
+            , viewOrganization package.organization
             ]
 
         viewCurrentVersion =
@@ -117,5 +119,17 @@ viewDetail package =
                     ++ viewSupportedMetamodel
                     ++ viewParentKnowledgeModel
                 )
+            ]
+        ]
+
+
+viewOrganization : OrganizationInfo -> Html msg
+viewOrganization organization =
+    div [ class "organization" ]
+        [ ItemIcon.view { text = organization.name, image = organization.logo }
+        , div [ class "content" ]
+            [ strong [] [ text organization.name ]
+            , br [] []
+            , text organization.organizationId
             ]
         ]
