@@ -44,42 +44,42 @@ jobs:
         - docker image tag $IMAGE_TAG $IMAGE_TAG_DEVELOP
         - docker push $IMAGE_TAG_DEVELOP
 
-    # - stage: tag
-    #   if: (branch = master) AND (NOT (type IN (pull_request)))
-    #   install: false
-    #   script:
-    #     - docker pull $IMAGE_TAG
-    #     - docker image tag $IMAGE_TAG $IMAGE_TAG_LATEST
-    #     - docker push $IMAGE_TAG_LATEST
+    - stage: tag
+      if: (branch = master) AND (NOT (type IN (pull_request)))
+      install: false
+      script:
+        - docker pull $IMAGE_TAG
+        - docker image tag $IMAGE_TAG $IMAGE_TAG_LATEST
+        - docker push $IMAGE_TAG_LATEST
 
-    # - stage: tag
-    #   if: (tag =~ ^v\d+\.\d+\.\d+$)
-    #   install: false
-    #   env:
-    #     - PRIVATE_IMAGE="$REGISTRY/registry-client"
-    #     - IMAGE="datastewardshipwizard/client"
-    #     - IMAGE_TAG="$PRIVATE_IMAGE:$TRAVIS_COMMIT"
-    #     - IMAGE_TAG_MAJOR="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v(.*)\..*\..*/\1/g"`
-    #     - IMAGE_TAG_MINOR="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v(.*)\..*/\1/g"`
-    #     - IMAGE_TAG_PATCH="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v//g"`
-    #   script:
-    #     - docker pull $IMAGE_TAG
-    #     - docker image tag $IMAGE_TAG $IMAGE_TAG_MAJOR
-    #     - docker push $IMAGE_TAG_MAJOR
-    #     - docker image tag $IMAGE_TAG $IMAGE_TAG_MINOR
-    #     - docker push $IMAGE_TAG_MINOR
-    #     - docker image tag $IMAGE_TAG $IMAGE_TAG_PATCH
-    #     - docker push $IMAGE_TAG_PATCH
+    - stage: tag
+      if: (tag =~ ^v\d+\.\d+\.\d+$)
+      install: false
+      env:
+        - PRIVATE_IMAGE="$REGISTRY/registry-client"
+        - IMAGE="$REGISTRY/client"
+        - IMAGE_TAG="$PRIVATE_IMAGE:$TRAVIS_COMMIT"
+        - IMAGE_TAG_MAJOR="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v(.*)\..*\..*/\1/g"`
+        - IMAGE_TAG_MINOR="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v(.*)\..*/\1/g"`
+        - IMAGE_TAG_PATCH="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v//g"`
+      script:
+        - docker pull $IMAGE_TAG
+        - docker image tag $IMAGE_TAG $IMAGE_TAG_MAJOR
+        - docker push $IMAGE_TAG_MAJOR
+        - docker image tag $IMAGE_TAG $IMAGE_TAG_MINOR
+        - docker push $IMAGE_TAG_MINOR
+        - docker image tag $IMAGE_TAG $IMAGE_TAG_PATCH
+        - docker push $IMAGE_TAG_PATCH
 
-    # - stage: tag
-    #   if: (tag =~ ^v\d+\.\d+\.\d+-rc\.\d+$)
-    #   install: false
-    #   env:
-    #     - PRIVATE_IMAGE="$REGISTRY/registry-client"
-    #     - IMAGE="datastewardshipwizard/client"
-    #     - IMAGE_TAG="$PRIVATE_IMAGE:$TRAVIS_COMMIT"
-    #     - IMAGE_TAG_RC="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v//g"`
-    #   script:
-    #     - docker pull $IMAGE_TAG
-    #     - docker image tag $IMAGE_TAG $IMAGE_TAG_RC
-    #     - docker push $IMAGE_TAG_RC
+    - stage: tag
+      if: (tag =~ ^v\d+\.\d+\.\d+-rc\.\d+$)
+      install: false
+      env:
+        - PRIVATE_IMAGE="$REGISTRY/registry-client"
+        - IMAGE="$REGISTRY/client"
+        - IMAGE_TAG="$PRIVATE_IMAGE:$TRAVIS_COMMIT"
+        - IMAGE_TAG_RC="$IMAGE:"`echo $TRAVIS_TAG | sed -E "s/v//g"`
+      script:
+        - docker pull $IMAGE_TAG
+        - docker image tag $IMAGE_TAG $IMAGE_TAG_RC
+        - docker push $IMAGE_TAG_RC
