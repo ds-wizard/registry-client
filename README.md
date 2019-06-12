@@ -1,3 +1,3 @@
-# Registry
+# Registry - Client Application
 
-TBD
+> Client part of the registry application.

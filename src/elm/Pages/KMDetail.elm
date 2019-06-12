@@ -18,6 +18,7 @@ import Html.Attributes exposing (class, href)
 import Http
 import Markdown
 import Routing
+import Version
 
 
 type alias Model =
@@ -68,24 +69,30 @@ viewDetail package =
 
         viewCurrentVersion =
             [ h5 [] [ text "Version" ]
-            , p [] [ text package.version ]
+            , p [] [ text <| Version.toString package.version ]
             ]
 
+        otherVersions =
+            package.versions
+                |> List.filter ((/=) package.version)
+                |> List.sortWith Version.compare
+                |> List.reverse
+
         viewOtherVersions =
-            case List.filter (not << (==) package.version) package.versions of
+            case otherVersions of
                 [] ->
                     []
 
                 versions ->
                     [ h5 [] [ text "Other versions" ]
                     , ul []
-                        (List.map viewVersion <| List.reverse versions)
+                        (List.map viewVersion versions)
                     ]
 
         viewVersion version =
             li []
-                [ a [ href <| Routing.toString <| Routing.KMDetail (package.organization.organizationId ++ ":" ++ package.kmId ++ ":" ++ version) ]
-                    [ text version ]
+                [ a [ href <| Routing.toString <| Routing.KMDetail (package.organization.organizationId ++ ":" ++ package.kmId ++ ":" ++ Version.toString version) ]
+                    [ text <| Version.toString version ]
                 ]
 
         viewSupportedMetamodel =
