@@ -1,5 +1,6 @@
 module ActionResult exposing
     ( ActionResult(..)
+    , apply
     , combine
     , combine3
     , isError
@@ -123,3 +124,18 @@ combine3 actionResult1 actionResult2 actionResult3 =
 
         Success ( ( a, b ), c ) ->
             Success ( a, b, c )
+
+
+apply :
+    (ActionResult data -> model -> model)
+    -> String
+    -> Result e data
+    -> model
+    -> model
+apply setData error result =
+    case result of
+        Ok data ->
+            setData (Success data)
+
+        Err _ ->
+            setData (Error error)

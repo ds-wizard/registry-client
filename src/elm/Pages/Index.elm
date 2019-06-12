@@ -1,8 +1,7 @@
-module Screens.Index exposing
+module Pages.Index exposing
     ( Model
-    , Msg(..)
+    , Msg
     , init
-    , initEmpty
     , update
     , view
     )
@@ -12,7 +11,7 @@ import Common.AppState exposing (AppState)
 import Common.Entities.Package exposing (Package)
 import Common.Requests as Requests
 import Common.View.Page as Page
-import Html exposing (Html, a, div, h1, h5, p, small, span, text)
+import Html exposing (Html, a, div, h5, p, small, text)
 import Html.Attributes exposing (class, href)
 import Http
 import Routing
@@ -22,33 +21,27 @@ type alias Model =
     { packages : ActionResult (List Package) }
 
 
-type Msg
-    = GetPackagesCompleted (Result Http.Error (List Package))
-
-
-initEmpty : Model
-initEmpty =
-    { packages = Loading }
+setPackages : ActionResult (List Package) -> Model -> Model
+setPackages packages model =
+    { model | packages = packages }
 
 
 init : AppState -> ( Model, Cmd Msg )
 init appState =
-    ( { packages = Loading
-      }
+    ( { packages = Loading }
     , Requests.getPackages appState GetPackagesCompleted
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+type Msg
+    = GetPackagesCompleted (Result Http.Error (List Package))
+
+
+update : Msg -> Model -> Model
+update msg =
     case msg of
         GetPackagesCompleted result ->
-            case result of
-                Ok packages ->
-                    ( { model | packages = Success packages }, Cmd.none )
-
-                Err _ ->
-                    ( { model | packages = Error "Unable to get packages." }, Cmd.none )
+            ActionResult.apply setPackages "Unable to get packages." result
 
 
 view : Model -> Html Msg
@@ -68,11 +61,7 @@ viewItem : Package -> Html Msg
 viewItem package =
     let
         packageLink =
-            Routing.toString <|
-                Routing.KMDetail
-                    package.organization.organizationId
-                    package.kmId
-                    "latest"
+            Routing.toString <| Routing.KMDetail package.id
     in
     div [ class "list-group-item flex-column align-items-start" ]
         [ div [ class "d-flex justify-content-between" ]
@@ -81,5 +70,5 @@ viewItem package =
                 ]
             , small [] [ text package.organization.name ]
             ]
-        , p [] [ text package.shortDescription ]
+        , p [] [ text package.description ]
         ]

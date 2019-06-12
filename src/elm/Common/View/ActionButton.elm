@@ -1,24 +1,9 @@
-module Common.View.ActionButton exposing
-    ( button
-    , submit
-    )
-
---import Common.Html exposing (fa)
+module Common.View.ActionButton exposing (submit)
 
 import ActionResult exposing (ActionResult(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
 import String
-
-
-{-| Action button invokes a message when clicked. It's appState is defined by
-the ActionResult. If the appState is Loading action button is disabled and
-a loader is shown instead of action name.
--}
-button : ( String, ActionResult a, msg ) -> Html msg
-button ( label, result, msg ) =
-    actionButtonView [ onClick msg ] label result
 
 
 submit : ( String, ActionResult a ) -> Html msg
@@ -34,8 +19,6 @@ actionButtonView attributes label result =
                 Loading ->
                     span [ class "spinner-border spinner-border-sm" ] []
 
-                --                    text "loading"
-                --                    fa "spinner fa-spin"
                 _ ->
                     text label
 

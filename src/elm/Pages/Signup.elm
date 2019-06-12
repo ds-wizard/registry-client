@@ -1,6 +1,6 @@
-module Screens.Signup exposing
+module Pages.Signup exposing
     ( Model
-    , Msg(..)
+    , Msg
     , init
     , update
     , view
@@ -11,9 +11,11 @@ import Common.AppState exposing (AppState)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
+import Common.View.FormResult as FormResult
+import Common.View.Page as Page
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, form, h1, h4, p, text)
+import Html exposing (Html, div, form, h1, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onSubmit)
 import Http
@@ -24,6 +26,18 @@ import Utils exposing (validateRegex)
 type alias Model =
     { form : Form () SignupForm
     , signingUp : ActionResult ()
+    }
+
+
+setSigningUp : ActionResult () -> Model -> Model
+setSigningUp signingUp model =
+    { model | signingUp = signingUp }
+
+
+init : Model
+init =
+    { form = initSignupForm
+    , signingUp = Unset
     }
 
 
@@ -54,13 +68,6 @@ type Msg
     | PostOrganizationCompleted (Result Http.Error ())
 
 
-init : Model
-init =
-    { form = initSignupForm
-    , signingUp = Unset
-    }
-
-
 update : Msg -> AppState -> Model -> ( Model, Cmd Msg )
 update msg appState model =
     case msg of
@@ -68,15 +75,7 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         PostOrganizationCompleted result ->
-            ( { model
-                | signingUp =
-                    case result of
-                        Ok _ ->
-                            Success ()
-
-                        Err _ ->
-                            Error ""
-              }
+            ( ActionResult.apply setSigningUp "Registration was not successful." result model
             , Cmd.none
             )
 
@@ -106,31 +105,25 @@ view model =
 
 successView : Html Msg
 successView =
-    div [ class "alert alert-success" ]
-        [ h4 [ class "alert-heading" ] [ text "Sign up successful" ]
-        , p [] [ text "Check your email address for the activation link." ]
-        ]
+    Page.illustratedMessage
+        { image = "confirmation"
+        , heading = "Sign up successful!"
+        , msg = "Check your email address for the activation link."
+        }
 
 
 formView : Model -> Html Msg
 formView model =
-    let
-        error =
-            if ActionResult.isError model.signingUp then
-                div [ class "alert alert-danger" ]
-                    [ text "Something went wrong while submitting the form." ]
-
-            else
-                text ""
-    in
-    div []
-        [ h1 [] [ text "Sign up" ]
-        , form [ onSubmit <| FormMsg Form.Submit ]
-            [ error
-            , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
-            , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
-            , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
-            , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
-            , ActionButton.submit ( "Sign up", model.signingUp )
+    div [ class "card card-form bg-light" ]
+        [ div [ class "card-header" ] [ text "Sign up" ]
+        , div [ class "card-body" ]
+            [ form [ onSubmit <| FormMsg Form.Submit ]
+                [ FormResult.errorOnlyView model.signingUp
+                , Html.map FormMsg <| FormGroup.input model.form "organizationId" "Organization ID"
+                , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
+                , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
+                , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
+                , ActionButton.submit ( "Sign up", model.signingUp )
+                ]
             ]
         ]

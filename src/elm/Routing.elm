@@ -5,24 +5,28 @@ import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, string, top)
 
 
 type Route
-    = Index
-    | KMDetail String String String
-    | Signup
-    | ConfirmSignup String String
+    = ForgottenToken
+    | ForgottenTokenConfirmation String String
+    | Index
+    | KMDetail String
     | Login
-    | OrganizationDetail String
+    | Organization
+    | Signup
+    | SignupConfirmation String String
     | NotFound
 
 
 routeParser : Parser (Route -> a) a
 routeParser =
     oneOf
-        [ map Index top
-        , map KMDetail (s "km" </> string </> string </> string)
-        , map Signup (s "signup")
-        , map ConfirmSignup (s "signup" </> string </> string)
+        [ map ForgottenToken (s "forgotten-token")
+        , map ForgottenTokenConfirmation (s "forgotten-token" </> string </> string)
+        , map Index top
+        , map KMDetail (s "knowledge-models" </> string)
         , map Login (s "login")
-        , map OrganizationDetail (s "organization" </> string)
+        , map Organization (s "organization")
+        , map Signup (s "signup")
+        , map SignupConfirmation (s "signup" </> string </> string)
         ]
 
 
@@ -34,23 +38,29 @@ toRoute url =
 toString : Route -> String
 toString route =
     case route of
+        ForgottenToken ->
+            "/forgotten-token"
+
+        ForgottenTokenConfirmation orgId hash ->
+            "/forgotten-token/" ++ orgId ++ "/" ++ hash
+
         Index ->
             "/"
 
-        KMDetail orgId kmId version ->
-            "/km/" ++ orgId ++ "/" ++ kmId ++ "/" ++ version
-
-        Signup ->
-            "/signup"
-
-        ConfirmSignup orgId hash ->
-            "/signup/" ++ orgId ++ "/" ++ hash
+        KMDetail pkgId ->
+            "/knowledge-models/" ++ pkgId
 
         Login ->
             "/login"
 
-        OrganizationDetail orgId ->
-            "/organization/" ++ orgId
+        Organization ->
+            "/organization"
+
+        Signup ->
+            "/signup"
+
+        SignupConfirmation orgId hash ->
+            "/signup/" ++ orgId ++ "/" ++ hash
 
         _ ->
             "/"

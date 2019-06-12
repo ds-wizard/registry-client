@@ -1,8 +1,9 @@
-module Utils exposing (flip, validateRegex)
+module Utils exposing (dispatch, validateRegex)
 
 import Form.Error as Error exposing (ErrorValue(..))
 import Form.Validate as Validate exposing (Validation, mapError)
 import Regex exposing (Regex)
+import Task
 
 
 validateRegex : String -> Validation e String
@@ -17,6 +18,6 @@ createRegex regex =
     Maybe.withDefault Regex.never <| Regex.fromString regex
 
 
-flip : (a -> b -> c) -> b -> a -> c
-flip fn a b =
-    fn b a
+dispatch : a -> Cmd a
+dispatch msg =
+    Task.perform (always msg) (Task.succeed ())

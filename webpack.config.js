@@ -9,7 +9,7 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 module.exports = {
     entry: [
         './src/index.js',
-        './src/sass/main.sass'
+        './src/sass/main.scss'
     ],
 
     output: {
@@ -62,12 +62,15 @@ module.exports = {
         }),
         new CopyWebpackPlugin([
             { from: 'src/img', to: 'img' },
+            { from: 'src/favicon.ico', to: 'favicon.ico' }
         ])
     ],
 
     devServer: {
         inline: true,
         stats: { colors: true },
-        historyApiFallback: true
+        historyApiFallback: {
+            disableDotRule: true
+        }
     }
 }
