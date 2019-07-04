@@ -40,10 +40,11 @@ postForgottenTokenActionKey { email } appState msg =
 
 
 postOrganization :
-    { organizationId : String
-    , name : String
-    , description : String
-    , email : String
+    { a
+        | organizationId : String
+        , name : String
+        , description : String
+        , email : String
     }
     -> AppState
     -> (Result Http.Error () -> msg)

@@ -14,9 +14,12 @@ import Common.View.FormGroup as FormGroup
 import Common.View.FormResult as FormResult
 import Common.View.Page as Page
 import Form exposing (Form)
+import Form.Error as Error exposing (Error, ErrorValue(..))
+import Form.Field as Field exposing (Field)
+import Form.Input as Input
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, form, h1, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, a, div, form, label, p, text)
+import Html.Attributes exposing (class, classList, for, href, id, name, target)
 import Html.Events exposing (onSubmit)
 import Http
 import Result exposing (Result)
@@ -46,16 +49,27 @@ type alias SignupForm =
     , name : String
     , email : String
     , description : String
+    , accept : Bool
     }
 
 
 signupFormValidation : Validation e SignupForm
 signupFormValidation =
-    Validate.map4 SignupForm
+    Validate.map5 SignupForm
         (Validate.field "organizationId" (validateRegex "^^(?![.])(?!.*[.]$)[a-zA-Z0-9.]+$"))
         (Validate.field "name" Validate.string)
         (Validate.field "email" Validate.email)
         (Validate.field "description" Validate.string)
+        (Validate.field "accept" validateAcceptField)
+
+
+validateAcceptField : Field -> Result (Error customError) Bool
+validateAcceptField v =
+    if Field.asBool v |> Maybe.withDefault False then
+        Ok True
+
+    else
+        Err (Error.value Empty)
 
 
 initSignupForm : Form e SignupForm
@@ -96,11 +110,13 @@ handleFormMsg formMsg appState model =
 
 view : Model -> Html Msg
 view model =
-    if ActionResult.isSuccess model.signingUp then
-        successView
+    div [ class "Signup" ]
+        [ if ActionResult.isSuccess model.signingUp then
+            successView
 
-    else
-        formView model
+          else
+            formView model
+        ]
 
 
 successView : Html Msg
@@ -114,6 +130,30 @@ successView =
 
 formView : Model -> Html Msg
 formView model =
+    let
+        acceptField =
+            Form.getFieldAsBool "accept" model.form
+
+        hasError =
+            case acceptField.liveError of
+                Just err ->
+                    True
+
+                Nothing ->
+                    False
+
+        acceptGroup =
+            div [ class "form-group form-group-accept", classList [ ( "has-error", hasError ) ] ]
+                [ label [ for "accept" ]
+                    [ Input.checkboxInput acceptField [ id "accept", name "accept" ]
+                    , text "I have read "
+                    , a [ href "https://ds-wizard.org/privacy.html", target "_blank" ]
+                        [ text "Privacy" ]
+                    , text "."
+                    ]
+                , p [ class "invalid-feedback" ] [ text "You have to read Privacy first" ]
+                ]
+    in
     div [ class "card card-form bg-light" ]
         [ div [ class "card-header" ] [ text "Sign up" ]
         , div [ class "card-body" ]
@@ -123,6 +163,7 @@ formView model =
                 , Html.map FormMsg <| FormGroup.input model.form "name" "Organization Name"
                 , Html.map FormMsg <| FormGroup.input model.form "email" "Email"
                 , Html.map FormMsg <| FormGroup.textarea model.form "description" "Organization Description"
+                , Html.map FormMsg <| acceptGroup
                 , ActionButton.submit ( "Sign up", model.signingUp )
                 ]
             ]
