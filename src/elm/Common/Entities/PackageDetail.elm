@@ -20,6 +20,7 @@ type alias PackageDetail =
     , parentPackageId : Maybe String
     , readme : String
     , versions : List Version
+    , license : String
     }
 
 
@@ -36,3 +37,4 @@ decoder =
         |> D.required "parentPackageId" (D.maybe D.string)
         |> D.required "readme" D.string
         |> D.required "versions" (D.list Version.decoder)
+        |> D.required "license" D.string
