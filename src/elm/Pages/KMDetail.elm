@@ -14,7 +14,7 @@ import Common.Requests as Requests
 import Common.View.ItemIcon as ItemIcon
 import Common.View.Page as Page
 import Html exposing (Html, a, br, code, div, h5, li, p, strong, text, ul)
-import Html.Attributes exposing (class, href)
+import Html.Attributes exposing (class, href, target)
 import Http
 import Markdown
 import Routing
@@ -65,6 +65,14 @@ viewDetail package =
         viewPublishedBy =
             [ h5 [] [ text "Published by" ]
             , viewOrganization package.organization
+            ]
+
+        viewLicense =
+            [ h5 [] [ text "License" ]
+            , p []
+                [ a [ href <| "https://spdx.org/licenses/" ++ package.license ++ ".html", target "_blank" ]
+                    [ text package.license ]
+                ]
             ]
 
         viewCurrentVersion =
@@ -121,6 +129,7 @@ viewDetail package =
             , div [ class "KMDetail__Panel col-12 col-md-4" ]
                 (viewKmId
                     ++ viewPublishedBy
+                    ++ viewLicense
                     ++ viewCurrentVersion
                     ++ viewOtherVersions
                     ++ viewSupportedMetamodel
