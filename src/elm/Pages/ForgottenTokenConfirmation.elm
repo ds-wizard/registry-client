@@ -8,21 +8,12 @@ module Pages.ForgottenTokenConfirmation exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
 import Common.Entities.OrganizationDetail exposing (OrganizationDetail)
 import Common.Requests as Requests
 import Common.View.Page as Page
 import Html exposing (Html, div, h1, p, strong, text)
 import Html.Attributes exposing (class)
-import Http
-
-
-type alias Model =
-    { organization : ActionResult OrganizationDetail }
-
-
-setOrganization : ActionResult OrganizationDetail -> Model -> Model
-setOrganization organization model =
-    { model | organization = organization }
 
 
 init : AppState -> String -> String -> ( Model, Cmd Msg )
@@ -37,15 +28,36 @@ init appState organizationId hash =
     )
 
 
+
+-- MODEL
+
+
+type alias Model =
+    { organization : ActionResult OrganizationDetail }
+
+
+setOrganization : ActionResult OrganizationDetail -> Model -> Model
+setOrganization organization model =
+    { model | organization = organization }
+
+
+
+-- UPDATE
+
+
 type Msg
-    = PutOrganizationTokenCompleted (Result Http.Error OrganizationDetail)
+    = PutOrganizationTokenCompleted (Result ApiError OrganizationDetail)
 
 
 update : Msg -> Model -> Model
 update msg =
     case msg of
         PutOrganizationTokenCompleted result ->
-            ActionResult.apply setOrganization "Unable to recover your organization token." result
+            ActionResult.apply setOrganization (ApiError.toActionResult "Unable to recover your organization token.") result
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

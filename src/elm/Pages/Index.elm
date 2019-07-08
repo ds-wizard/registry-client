@@ -8,13 +8,24 @@ module Pages.Index exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
 import Common.Entities.Package exposing (Package)
 import Common.Requests as Requests
 import Common.View.Page as Page
 import Html exposing (Html, a, div, h5, p, small, text)
 import Html.Attributes exposing (class, href)
-import Http
 import Routing
+
+
+init : AppState -> ( Model, Cmd Msg )
+init appState =
+    ( { packages = Loading }
+    , Requests.getPackages appState GetPackagesCompleted
+    )
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -26,22 +37,23 @@ setPackages packages model =
     { model | packages = packages }
 
 
-init : AppState -> ( Model, Cmd Msg )
-init appState =
-    ( { packages = Loading }
-    , Requests.getPackages appState GetPackagesCompleted
-    )
+
+-- UPDATE
 
 
 type Msg
-    = GetPackagesCompleted (Result Http.Error (List Package))
+    = GetPackagesCompleted (Result ApiError (List Package))
 
 
 update : Msg -> Model -> Model
 update msg =
     case msg of
         GetPackagesCompleted result ->
-            ActionResult.apply setPackages "Unable to get packages." result
+            ActionResult.apply setPackages (ApiError.toActionResult "Unable to get packages.") result
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

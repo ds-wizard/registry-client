@@ -8,21 +8,33 @@ module Pages.Login exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState as AppState exposing (AppState)
+import Common.Entities.ApiError exposing (ApiError)
+import Common.FormExtra exposing (CustomFormError)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
 import Common.View.FormResult as FormResult
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, a, div, form, h1, text)
+import Html exposing (Html, a, div, form, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onSubmit)
-import Http
 import Routing
 
 
+init : Model
+init =
+    { form = initLoginForm
+    , loggingIn = Unset
+    }
+
+
+
+-- MODEL
+
+
 type alias Model =
-    { form : Form () LoginForm
+    { form : Form CustomFormError LoginForm
     , loggingIn : ActionResult ()
     }
 
@@ -45,16 +57,13 @@ initLoginForm =
     Form.initial [] loginFormValidation
 
 
+
+-- UPDATE
+
+
 type Msg
     = FormMsg Form.Msg
-    | GetTokenCompleted (Result Http.Error String)
-
-
-init : Model
-init =
-    { form = initLoginForm
-    , loggingIn = Unset
-    }
+    | GetTokenCompleted (Result ApiError String)
 
 
 update :
@@ -94,6 +103,10 @@ handleFormMsg tagger formMsg appState model =
             ( { model | form = Form.update loginFormValidation formMsg model.form }
             , Cmd.none
             )
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

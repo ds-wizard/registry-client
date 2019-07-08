@@ -128,14 +128,14 @@ combine3 actionResult1 actionResult2 actionResult3 =
 
 apply :
     (ActionResult data -> model -> model)
-    -> String
+    -> (e -> ActionResult data)
     -> Result e data
     -> model
     -> model
-apply setData error result =
+apply setData convertError result =
     case result of
         Ok data ->
             setData (Success data)
 
-        Err _ ->
-            setData (Error error)
+        Err err ->
+            setData (convertError err)

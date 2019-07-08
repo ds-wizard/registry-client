@@ -8,6 +8,8 @@ module Pages.ForgottenToken exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState as AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
+import Common.FormExtra exposing (CustomFormError)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
@@ -15,14 +17,25 @@ import Common.View.FormResult as FormResult
 import Common.View.Page as Page
 import Form exposing (Form)
 import Form.Validate as Validate exposing (Validation)
-import Html exposing (Html, div, form, h1, p, text)
+import Html exposing (Html, div, form, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onSubmit)
-import Http
+import Result exposing (Result)
+
+
+init : Model
+init =
+    { form = initRecoveryForm
+    , submitting = Unset
+    }
+
+
+
+-- MODEL
 
 
 type alias Model =
-    { form : Form () RecoveryForm
+    { form : Form CustomFormError RecoveryForm
     , submitting : ActionResult ()
     }
 
@@ -47,16 +60,13 @@ initRecoveryForm =
     Form.initial [] recoveryFormValidation
 
 
+
+-- UPDATE
+
+
 type Msg
     = FormMsg Form.Msg
-    | PostForgottenTokenActionKeyCompleted (Result Http.Error ())
-
-
-init : Model
-init =
-    { form = initRecoveryForm
-    , submitting = Unset
-    }
+    | PostForgottenTokenActionKeyCompleted (Result ApiError ())
 
 
 update : Msg -> AppState -> Model -> ( Model, Cmd Msg )
@@ -66,7 +76,7 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         PostForgottenTokenActionKeyCompleted result ->
-            ( ActionResult.apply setSubmitting "Could not recover token." result model
+            ( ActionResult.apply setSubmitting (ApiError.toActionResult "Could not recover token.") result model
             , Cmd.none
             )
 
@@ -83,6 +93,10 @@ handleFormMsg formMsg appState model =
             ( { model | form = Form.update recoveryFormValidation formMsg model.form }
             , Cmd.none
             )
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

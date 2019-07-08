@@ -10,6 +10,7 @@ module Common.View.FormGroup exposing
     , toggle
     )
 
+import Common.FormExtra exposing (CustomFormError(..))
 import Common.Html exposing (emptyNode)
 import Form exposing (Form, InputType(..), Msg(..))
 import Form.Error exposing (ErrorValue(..))
@@ -21,35 +22,35 @@ import String exposing (fromFloat)
 
 {-| Helper for creating form group with text input field.
 -}
-input : Form e o -> String -> String -> Html Form.Msg
+input : Form CustomFormError o -> String -> String -> Html Form.Msg
 input =
     formGroup Input.textInput []
 
 
 {-| Helper for creating form group with password input field.
 -}
-password : Form e o -> String -> String -> Html Form.Msg
+password : Form CustomFormError o -> String -> String -> Html Form.Msg
 password =
     formGroup Input.passwordInput []
 
 
 {-| Helper for creating form group with select field.
 -}
-select : List ( String, String ) -> Form e o -> String -> String -> Html Form.Msg
+select : List ( String, String ) -> Form CustomFormError o -> String -> String -> Html Form.Msg
 select options =
     formGroup (Input.selectInput options) []
 
 
 {-| Helper for creating form group with textarea.
 -}
-textarea : Form e o -> String -> String -> Html Form.Msg
+textarea : Form CustomFormError o -> String -> String -> Html Form.Msg
 textarea =
     formGroup Input.textArea []
 
 
 {-| Helper for creating form group with toggle
 -}
-toggle : Form e o -> String -> String -> Html Form.Msg
+toggle : Form CustomFormError o -> String -> String -> Html Form.Msg
 toggle form fieldName labelText =
     let
         field =
@@ -65,7 +66,7 @@ toggle form fieldName labelText =
 
 {-| Create Html for a form field using the given input field.
 -}
-formGroup : Input.Input e String -> List (Html.Attribute Form.Msg) -> Form e o -> String -> String -> Html.Html Form.Msg
+formGroup : Input.Input CustomFormError String -> List (Html.Attribute Form.Msg) -> Form CustomFormError o -> String -> String -> Html.Html Form.Msg
 formGroup inputFn attrs form fieldName labelText =
     let
         field =
@@ -111,7 +112,7 @@ plainGroup valueHtml labelText =
 {-| Get Html and form group error class for a given field. If the field
 contains no errors, the returned Html and error class are empty.
 -}
-getErrors : Form.FieldState e String -> String -> ( Html msg, String )
+getErrors : Form.FieldState CustomFormError String -> String -> ( Html msg, String )
 getErrors field labelText =
     case field.liveError of
         Just error ->
@@ -121,7 +122,7 @@ getErrors field labelText =
             ( emptyNode, "" )
 
 
-toReadable : ErrorValue e -> String -> String
+toReadable : ErrorValue CustomFormError -> String -> String
 toReadable error labelText =
     case error of
         Empty ->
@@ -141,6 +142,14 @@ toReadable error labelText =
 
         GreaterFloatThan n ->
             "This should not be more than " ++ fromFloat n
+
+        CustomError err ->
+            case err of
+                ServerValidationError msg ->
+                    msg
+
+                Error msg ->
+                    msg
 
         _ ->
             "Invalid value"
