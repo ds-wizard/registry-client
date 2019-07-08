@@ -8,21 +8,12 @@ module Pages.SignupConfirmation exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
 import Common.Entities.OrganizationDetail exposing (OrganizationDetail)
 import Common.Requests as Requests
 import Common.View.Page as Page
 import Html exposing (Html, div, h1, p, strong, text)
 import Html.Attributes exposing (class)
-import Http
-
-
-type alias Model =
-    { organization : ActionResult OrganizationDetail }
-
-
-setOrganization : ActionResult OrganizationDetail -> Model -> Model
-setOrganization organization model =
-    { model | organization = organization }
 
 
 init : AppState -> String -> String -> ( Model, Cmd Msg )
@@ -38,15 +29,36 @@ init appState organizationId hash =
     )
 
 
+
+-- MODEL
+
+
+type alias Model =
+    { organization : ActionResult OrganizationDetail }
+
+
+setOrganization : ActionResult OrganizationDetail -> Model -> Model
+setOrganization organization model =
+    { model | organization = organization }
+
+
+
+-- UPDATE
+
+
 type Msg
-    = PutOrganizationStateCompleted (Result Http.Error OrganizationDetail)
+    = PutOrganizationStateCompleted (Result ApiError OrganizationDetail)
 
 
 update : Msg -> Model -> Model
 update msg =
     case msg of
         PutOrganizationStateCompleted result ->
-            ActionResult.apply setOrganization "Unable to activate your organization account." result
+            ActionResult.apply setOrganization (ApiError.toActionResult "Unable to activate your organization account.") result
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

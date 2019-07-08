@@ -8,6 +8,7 @@ module Pages.KMDetail exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
 import Common.Entities.OrganizationInfo exposing (OrganizationInfo)
 import Common.Entities.PackageDetail exposing (PackageDetail)
 import Common.Requests as Requests
@@ -15,10 +16,20 @@ import Common.View.ItemIcon as ItemIcon
 import Common.View.Page as Page
 import Html exposing (Html, a, br, code, div, h5, li, p, strong, text, ul)
 import Html.Attributes exposing (class, href, target)
-import Http
 import Markdown
 import Routing
 import Version
+
+
+init : AppState -> String -> ( Model, Cmd Msg )
+init appState packageId =
+    ( { package = Loading }
+    , Requests.getPackage appState packageId GetPackageCompleted
+    )
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -30,22 +41,23 @@ setPackage package model =
     { model | package = package }
 
 
-init : AppState -> String -> ( Model, Cmd Msg )
-init appState packageId =
-    ( { package = Loading }
-    , Requests.getPackage appState packageId GetPackageCompleted
-    )
+
+-- UPDATE
 
 
 type Msg
-    = GetPackageCompleted (Result Http.Error PackageDetail)
+    = GetPackageCompleted (Result ApiError PackageDetail)
 
 
 update : Msg -> Model -> Model
 update msg =
     case msg of
         GetPackageCompleted result ->
-            ActionResult.apply setPackage "Unable to get package." result
+            ActionResult.apply setPackage (ApiError.toActionResult "Unable to get package.") result
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

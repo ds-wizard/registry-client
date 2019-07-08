@@ -8,6 +8,8 @@ module Pages.Signup exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
+import Common.FormExtra exposing (CustomFormError, setFormErrors)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
@@ -21,26 +23,24 @@ import Form.Validate as Validate exposing (Validation)
 import Html exposing (Html, a, div, form, label, p, text)
 import Html.Attributes exposing (class, classList, for, href, id, name, target)
 import Html.Events exposing (onSubmit)
-import Http
 import Result exposing (Result)
 import Utils exposing (validateRegex)
-
-
-type alias Model =
-    { form : Form () SignupForm
-    , signingUp : ActionResult ()
-    }
-
-
-setSigningUp : ActionResult () -> Model -> Model
-setSigningUp signingUp model =
-    { model | signingUp = signingUp }
 
 
 init : Model
 init =
     { form = initSignupForm
     , signingUp = Unset
+    }
+
+
+
+-- MODEL
+
+
+type alias Model =
+    { form : Form CustomFormError SignupForm
+    , signingUp : ActionResult ()
     }
 
 
@@ -77,9 +77,13 @@ initSignupForm =
     Form.initial [] signupFormValidation
 
 
+
+-- UPDATE
+
+
 type Msg
     = FormMsg Form.Msg
-    | PostOrganizationCompleted (Result Http.Error ())
+    | PostOrganizationCompleted (Result ApiError ())
 
 
 update : Msg -> AppState -> Model -> ( Model, Cmd Msg )
@@ -89,9 +93,17 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         PostOrganizationCompleted result ->
-            ( ActionResult.apply setSigningUp "Registration was not successful." result model
-            , Cmd.none
-            )
+            case result of
+                Ok _ ->
+                    ( { model | signingUp = Success () }, Cmd.none )
+
+                Err err ->
+                    ( { model
+                        | signingUp = ApiError.toActionResult "Registration was not successful." err
+                        , form = setFormErrors err model.form
+                      }
+                    , Cmd.none
+                    )
 
 
 handleFormMsg : Form.Msg -> AppState -> Model -> ( Model, Cmd Msg )
@@ -106,6 +118,10 @@ handleFormMsg formMsg appState model =
             ( { model | form = Form.update signupFormValidation formMsg model.form }
             , Cmd.none
             )
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -136,7 +152,7 @@ formView model =
 
         hasError =
             case acceptField.liveError of
-                Just err ->
+                Just _ ->
                     True
 
                 Nothing ->
