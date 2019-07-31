@@ -121,9 +121,9 @@ viewDetail package =
             ]
 
         viewParentKnowledgeModel =
-            case package.parentPackageId of
+            case package.forkOfPackageId of
                 Just parentPackageId ->
-                    [ h5 [] [ text "Parent Knowledge Model" ]
+                    [ h5 [] [ text "Fork of" ]
                     , p []
                         [ a [ href <| Routing.toString <| Routing.KMDetail parentPackageId ]
                             [ text parentPackageId
