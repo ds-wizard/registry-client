@@ -8,17 +8,28 @@ module Pages.KMDetail exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
 import Common.Entities.OrganizationInfo exposing (OrganizationInfo)
 import Common.Entities.PackageDetail exposing (PackageDetail)
 import Common.Requests as Requests
 import Common.View.ItemIcon as ItemIcon
 import Common.View.Page as Page
 import Html exposing (Html, a, br, code, div, h5, li, p, strong, text, ul)
-import Html.Attributes exposing (class, href)
-import Http
+import Html.Attributes exposing (class, href, target)
 import Markdown
 import Routing
 import Version
+
+
+init : AppState -> String -> ( Model, Cmd Msg )
+init appState packageId =
+    ( { package = Loading }
+    , Requests.getPackage appState packageId GetPackageCompleted
+    )
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -30,22 +41,23 @@ setPackage package model =
     { model | package = package }
 
 
-init : AppState -> String -> ( Model, Cmd Msg )
-init appState packageId =
-    ( { package = Loading }
-    , Requests.getPackage appState packageId GetPackageCompleted
-    )
+
+-- UPDATE
 
 
 type Msg
-    = GetPackageCompleted (Result Http.Error PackageDetail)
+    = GetPackageCompleted (Result ApiError PackageDetail)
 
 
 update : Msg -> Model -> Model
 update msg =
     case msg of
         GetPackageCompleted result ->
-            ActionResult.apply setPackage "Unable to get package." result
+            ActionResult.apply setPackage (ApiError.toActionResult "Unable to get package.") result
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -65,6 +77,14 @@ viewDetail package =
         viewPublishedBy =
             [ h5 [] [ text "Published by" ]
             , viewOrganization package.organization
+            ]
+
+        viewLicense =
+            [ h5 [] [ text "License" ]
+            , p []
+                [ a [ href <| "https://spdx.org/licenses/" ++ package.license ++ ".html", target "_blank" ]
+                    [ text package.license ]
+                ]
             ]
 
         viewCurrentVersion =
@@ -101,9 +121,9 @@ viewDetail package =
             ]
 
         viewParentKnowledgeModel =
-            case package.parentPackageId of
+            case package.forkOfPackageId of
                 Just parentPackageId ->
-                    [ h5 [] [ text "Parent Knowledge Model" ]
+                    [ h5 [] [ text "Fork of" ]
                     , p []
                         [ a [ href <| Routing.toString <| Routing.KMDetail parentPackageId ]
                             [ text parentPackageId
@@ -121,6 +141,7 @@ viewDetail package =
             , div [ class "KMDetail__Panel col-12 col-md-4" ]
                 (viewKmId
                     ++ viewPublishedBy
+                    ++ viewLicense
                     ++ viewCurrentVersion
                     ++ viewOtherVersions
                     ++ viewSupportedMetamodel

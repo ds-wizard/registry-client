@@ -11,18 +11,23 @@ module Common.Requests exposing
     )
 
 import Common.AppState exposing (AppState)
+import Common.Entities.ApiError exposing (ApiError(..))
 import Common.Entities.OrganizationDetail as OrganizationDetail exposing (OrganizationDetail)
 import Common.Entities.Package as Package exposing (Package)
 import Common.Entities.PackageDetail as PackageDetail exposing (PackageDetail)
 import Http
-import Json.Decode as D
+import Json.Decode as D exposing (Decoder)
 import Json.Encode as E
+
+
+type alias ToMsg a msg =
+    Result ApiError a -> msg
 
 
 postForgottenTokenActionKey :
     { email : String }
     -> AppState
-    -> (Result Http.Error () -> msg)
+    -> ToMsg () msg
     -> Cmd msg
 postForgottenTokenActionKey { email } appState msg =
     let
@@ -35,18 +40,19 @@ postForgottenTokenActionKey { email } appState msg =
     Http.post
         { url = appState.apiUrl ++ "/action-keys"
         , body = Http.jsonBody body
-        , expect = Http.expectWhatever msg
+        , expect = expectWhatever msg
         }
 
 
 postOrganization :
-    { organizationId : String
-    , name : String
-    , description : String
-    , email : String
+    { a
+        | organizationId : String
+        , name : String
+        , description : String
+        , email : String
     }
     -> AppState
-    -> (Result Http.Error () -> msg)
+    -> ToMsg () msg
     -> Cmd msg
 postOrganization organization appState msg =
     let
@@ -61,7 +67,7 @@ postOrganization organization appState msg =
     Http.post
         { url = appState.apiUrl ++ "/organizations"
         , body = Http.jsonBody body
-        , expect = Http.expectWhatever msg
+        , expect = expectWhatever msg
         }
 
 
@@ -71,7 +77,7 @@ putOrganization :
     , email : String
     }
     -> AppState
-    -> (Result Http.Error OrganizationDetail -> msg)
+    -> ToMsg OrganizationDetail msg
     -> Cmd msg
 putOrganization data appState msg =
     let
@@ -92,7 +98,7 @@ putOrganization data appState msg =
         , headers = authHeadersFromAppState appState
         , url = appState.apiUrl ++ "/organizations/" ++ orgId
         , body = Http.jsonBody body
-        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , expect = expectJson msg OrganizationDetail.decoder
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -103,7 +109,7 @@ getOrganization :
     , token : String
     }
     -> AppState
-    -> (Result Http.Error OrganizationDetail -> msg)
+    -> ToMsg OrganizationDetail msg
     -> Cmd msg
 getOrganization { organizationId, token } appState msg =
     Http.request
@@ -111,7 +117,7 @@ getOrganization { organizationId, token } appState msg =
         , headers = authHeaders token
         , url = appState.apiUrl ++ "/organizations/" ++ organizationId
         , body = Http.emptyBody
-        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , expect = expectJson msg OrganizationDetail.decoder
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -123,7 +129,7 @@ putOrganizationState :
     , active : Bool
     }
     -> AppState
-    -> (Result Http.Error OrganizationDetail -> msg)
+    -> ToMsg OrganizationDetail msg
     -> Cmd msg
 putOrganizationState data appState msg =
     let
@@ -135,7 +141,7 @@ putOrganizationState data appState msg =
         , headers = []
         , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId ++ "/state?hash=" ++ data.hash
         , body = Http.jsonBody body
-        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , expect = expectJson msg OrganizationDetail.decoder
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -146,7 +152,7 @@ putOrganizationToken :
     , hash : String
     }
     -> AppState
-    -> (Result Http.Error OrganizationDetail -> msg)
+    -> ToMsg OrganizationDetail msg
     -> Cmd msg
 putOrganizationToken data appState msg =
     Http.request
@@ -154,7 +160,7 @@ putOrganizationToken data appState msg =
         , headers = []
         , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId ++ "/token?hash=" ++ data.hash
         , body = Http.emptyBody
-        , expect = Http.expectJson msg OrganizationDetail.decoder
+        , expect = expectJson msg OrganizationDetail.decoder
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -165,7 +171,7 @@ getToken :
     , token : String
     }
     -> AppState
-    -> (Result Http.Error String -> msg)
+    -> ToMsg String msg
     -> Cmd msg
 getToken data appState msg =
     Http.request
@@ -173,25 +179,25 @@ getToken data appState msg =
         , headers = authHeaders data.token
         , url = appState.apiUrl ++ "/organizations/" ++ data.organizationId
         , body = Http.emptyBody
-        , expect = Http.expectJson msg (D.field "token" D.string)
+        , expect = expectJson msg (D.field "token" D.string)
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-getPackages : AppState -> (Result Http.Error (List Package) -> msg) -> Cmd msg
+getPackages : AppState -> ToMsg (List Package) msg -> Cmd msg
 getPackages appState msg =
     Http.get
         { url = appState.apiUrl ++ "/packages"
-        , expect = Http.expectJson msg (D.list Package.decoder)
+        , expect = expectJson msg (D.list Package.decoder)
         }
 
 
-getPackage : AppState -> String -> (Result Http.Error PackageDetail -> msg) -> Cmd msg
+getPackage : AppState -> String -> ToMsg PackageDetail msg -> Cmd msg
 getPackage appState pkgId msg =
     Http.get
         { url = appState.apiUrl ++ "/packages/" ++ pkgId
-        , expect = Http.expectJson msg PackageDetail.decoder
+        , expect = expectJson msg PackageDetail.decoder
         }
 
 
@@ -208,3 +214,37 @@ authHeadersFromAppState appState =
 authHeaders : String -> List Http.Header
 authHeaders token =
     [ Http.header "Authorization" <| "Bearer " ++ token ]
+
+
+expectJson : ToMsg a msg -> Decoder a -> Http.Expect msg
+expectJson toMsg decoder =
+    Http.expectStringResponse toMsg <|
+        resolve <|
+            \string ->
+                Result.mapError D.errorToString (D.decodeString decoder string)
+
+
+expectWhatever : ToMsg () msg -> Http.Expect msg
+expectWhatever toMsg =
+    Http.expectStringResponse toMsg <|
+        resolve <|
+            \_ -> Ok ()
+
+
+resolve : (String -> Result String a) -> Http.Response String -> Result ApiError a
+resolve toResult response =
+    case response of
+        Http.BadUrl_ url ->
+            Err (BadUrl url)
+
+        Http.Timeout_ ->
+            Err Timeout
+
+        Http.NetworkError_ ->
+            Err NetworkError
+
+        Http.BadStatus_ metadata body ->
+            Err (BadStatus metadata.statusCode body)
+
+        Http.GoodStatus_ _ body ->
+            Result.mapError BadBody (toResult body)

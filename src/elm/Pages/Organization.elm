@@ -8,7 +8,9 @@ module Pages.Organization exposing
 
 import ActionResult exposing (ActionResult(..))
 import Common.AppState as AppState exposing (AppState)
+import Common.Entities.ApiError as ApiError exposing (ApiError)
 import Common.Entities.OrganizationDetail exposing (OrganizationDetail)
+import Common.FormExtra exposing (CustomFormError, setFormErrors)
 import Common.Requests as Requests
 import Common.View.ActionButton as ActionButton
 import Common.View.FormGroup as FormGroup
@@ -18,12 +20,25 @@ import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (Validation)
 import Html exposing (Html, div, form, h1, text)
 import Html.Events exposing (onSubmit)
-import Http
+
+
+init : AppState -> AppState.Credentials -> ( Model, Cmd Msg )
+init appState credentials =
+    ( { organization = Loading
+      , form = initOrganizationForm []
+      , saving = Unset
+      }
+    , Requests.getOrganization credentials appState GetOrganizationCompleted
+    )
+
+
+
+-- MODEL
 
 
 type alias Model =
     { organization : ActionResult OrganizationDetail
-    , form : Form () OrganizationForm
+    , form : Form CustomFormError OrganizationForm
     , saving : ActionResult String
     }
 
@@ -73,20 +88,14 @@ initOrganizationForm initials =
     Form.initial initials organizationFormValidation
 
 
-init : AppState -> AppState.Credentials -> ( Model, Cmd Msg )
-init appState credentials =
-    ( { organization = Loading
-      , form = initOrganizationForm []
-      , saving = Unset
-      }
-    , Requests.getOrganization credentials appState GetOrganizationCompleted
-    )
+
+-- UPDATE
 
 
 type Msg
     = FormMsg Form.Msg
-    | GetOrganizationCompleted (Result Http.Error OrganizationDetail)
-    | PutOrganizationCompleted (Result Http.Error OrganizationDetail)
+    | GetOrganizationCompleted (Result ApiError OrganizationDetail)
+    | PutOrganizationCompleted (Result ApiError OrganizationDetail)
 
 
 update : Msg -> AppState -> Model -> ( Model, Cmd Msg )
@@ -96,7 +105,7 @@ update msg appState model =
             handleFormMsg formMsg appState model
 
         GetOrganizationCompleted result ->
-            ( ActionResult.apply setOrganization "Unable to get organization detail." result model
+            ( ActionResult.apply setOrganization (ApiError.toActionResult "Unable to get organization detail.") result model
             , Cmd.none
             )
 
@@ -110,8 +119,11 @@ update msg appState model =
                                 , form = initOrganizationForm <| organizationFormInitials organization
                             }
 
-                        Err _ ->
-                            { model | saving = Error "Unable to save changes." }
+                        Err err ->
+                            { model
+                                | saving = ApiError.toActionResult "Unable to save changes." err
+                                , form = setFormErrors err model.form
+                            }
             in
             ( newModel, Cmd.none )
 
@@ -128,6 +140,10 @@ handleFormMsg formMsg appState model =
             ( { model | form = Form.update organizationFormValidation formMsg model.form }
             , Cmd.none
             )
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg
